@@ -6,31 +6,38 @@ Tracks what works, what's left to build, current status, known issues, and the e
 
 ## What Works
 
-- Login page completamente migrata in Next.js con componenti modulari e stile fedele all’HTML originale.
-- Home page migrata in Next.js con componenti modulari e layout responsive.
-- Navigazione e header globali tramite layout Next.js.
-- Tailwind CSS configurato con palette personalizzata e font Inter.
-- Font Awesome funzionante tramite CDN globale.
-- Componenti riusabili creati per PlayButton, NewReleaseCard e BookCard, riducendo duplicazione e facilitando la manutenzione.
-
+- **Frontend Authentication System (Stable):**
+    - Login page implemented (`login/page.tsx`).
+    - API client for authentication (`authClient.ts`).
+    - Global state management via Zustand (`useAuthStore`).
+    - Route protection using `AuthGuard`.
+    - Integration into main layout (`layout.tsx`) using `ClientAuthWrapper` pattern to handle client-side logic within a server component layout.
+    - Tokens stored in `localStorage`.
+- Login page migrated to Next.js with modular components.
+- Home page migrated to Next.js with modular components and responsive layout.
+- Global navigation and header via Next.js layout.
+- Tailwind CSS configured with custom palette and Inter font.
+- Font Awesome functional via global CDN.
+- Reusable components created (PlayButton, NewReleaseCard, BookCard), reducing duplication.
 ## What's Left to Build
 
-- Migrazione di eventuali altre pagine HTML.
-- Integrazione della logica di autenticazione e collegamento al backend.
-- Gestione avanzata dello stato (es. audiolibro in ascolto, preferiti).
-- Miglioramento accessibilità e test end-to-end.
-- Aggiornamento e completamento della documentazione tecnica e di prodotto.
-
+- **Authentication Enhancements:**
+    - Implement refresh token handling.
+    - Add user profile page/management.
+    - Consider social login options (e.g., Google).
+- Migrate any remaining HTML pages.
+- Implement advanced state management (e.g., currently playing audiobook, favorites).
+- Improve accessibility and implement end-to-end tests.
+- Update and complete technical and product documentation.
 ## Current Status
 
 La base frontend è ora moderna, modulare e pronta per l’integrazione di logica applicativa e backend. La UI è coerente, facilmente estendibile e manutenibile grazie alla componentizzazione.
 
 ## Known Issues
 
-- Mancano logica di autenticazione e connessione dati reali.
-- Alcuni componenti sono statici e non interattivi.
-- Da verificare la compatibilità mobile su tutti i dispositivi.
-
+- Some components are static and lack full interactivity (beyond auth).
+- Mobile compatibility needs thorough testing across devices.
+- Refresh token handling is not yet implemented.
 ## Evolution of Project Decisions
 
 - Scelta di modularizzare tutte le UI in componenti React.

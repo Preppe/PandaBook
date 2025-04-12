@@ -1,6 +1,57 @@
-"use client";
+'use client';
+
+import React, { useState, useEffect, FormEvent } from 'react';
+import { useRouter } from 'next/navigation';
+// import { useAuth } from '../../context/AuthContext'; // Remove old context import
+import useAuthStore from '@/lib/store/authStore'; // Import Zustand store
 
 export default function LoginPage() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  // Get state and actions from Zustand store
+  const { login, isLoading, isAuthenticated } = useAuthStore();
+  // Note: 'user' object is not directly needed for the login page logic here
+  const router = useRouter();
+
+  // Redirect if already logged in
+  useEffect(() => {
+    // Redirect only if authentication status is confirmed (not loading) and user is authenticated
+    if (!isLoading && isAuthenticated) {
+      console.log('User already authenticated, redirecting from login...');
+      // Redirect to a protected route, e.g., home or dashboard
+      router.push('/'); // Or '/dashboard' or wherever appropriate
+    }
+  }, [isAuthenticated, isLoading, router]);
+
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setError(null); // Clear previous errors
+
+    if (!email || !password) {
+      setError('Email and password are required.');
+      return;
+    }
+
+    try {
+      await login({ email, password });
+      // Login successful, the useEffect above should handle redirection
+      // Or you could explicitly redirect here if preferred:
+      // router.push('/');
+    } catch (err: any) {
+      console.error('Login page error:', err);
+      // Set error message based on the error thrown from AuthContext
+      setError(err.message || 'Login failed. Please check your credentials.');
+    }
+  };
+
+  // Don't render the login form if the user is authenticated and redirection is pending
+  // or if initial loading is still happening (to avoid flash of content)
+  if (isLoading || isAuthenticated) {
+      // You can show a loading indicator or null while redirecting/loading
+      return <div className="min-h-screen flex items-center justify-center"><p>Loading...</p></div>;
+  }
+
   return (
     <div
       id="mobile-login-container"
@@ -34,15 +85,24 @@ export default function LoginPage() {
           </p>
         </div>
 
-        <form id="login-form" className="w-full space-y-4 mt-6">
+        <form id="login-form" className="w-full space-y-4 mt-6" onSubmit={handleSubmit}>
+          {error && (
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+              <span className="block sm:inline">{error}</span>
+            </div>
+          )}
           <div className="space-y-2">
             <label className="text-red-800 text-sm font-medium">Email</label>
             <div className="relative">
               <i className="fa-regular fa-envelope absolute left-3 top-3 text-red-400"></i>
               <input
                 type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 className="w-full bg-white/70 border border-red-200 rounded-xl py-2 px-10 focus:outline-none focus:ring-2 focus:ring-red-400 text-red-800 placeholder-red-300"
                 placeholder="Il tuo indirizzo email"
+                required
+                disabled={isLoading}
               />
             </div>
           </div>
@@ -53,8 +113,12 @@ export default function LoginPage() {
               <i className="fa-regular fa-lock absolute left-3 top-3 text-red-400"></i>
               <input
                 type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 className="w-full bg-white/70 border border-red-200 rounded-xl py-2 px-10 focus:outline-none focus:ring-2 focus:ring-red-400 text-red-800 placeholder-red-300"
                 placeholder="La tua password"
+                required
+                disabled={isLoading}
               />
             </div>
           </div>
@@ -65,6 +129,7 @@ export default function LoginPage() {
                 type="checkbox"
                 id="remember"
                 className="w-4 h-4 rounded border-red-300 text-red-500 focus:ring-red-400"
+                disabled={isLoading}
               />
               <label htmlFor="remember" className="ml-2 text-sm text-red-700">
                 Ricordami
@@ -77,12 +142,14 @@ export default function LoginPage() {
 
           <button
             type="submit"
-            className="w-full bg-red-500 hover:bg-red-600 text-white font-medium py-3 rounded-xl mt-6 shadow-lg shadow-red-500/30 transition-all"
+            className="w-full bg-red-500 hover:bg-red-600 text-white font-medium py-3 rounded-xl mt-6 shadow-lg shadow-red-500/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={isLoading}
           >
-            Accedi
+            {isLoading ? 'Accesso in corso...' : 'Accedi'}
           </button>
         </form>
 
+        {/* Social login and signup links remain for now, functionality not implemented */}
         <div id="social-login" className="w-full space-y-4 mt-6">
           <div className="relative flex items-center">
             <div className="flex-grow border-t border-red-200"></div>
@@ -93,13 +160,13 @@ export default function LoginPage() {
           </div>
 
           <div className="flex gap-4 justify-center">
-            <button className="flex-1 py-2.5 px-4 border border-red-200 rounded-xl bg-white/70 hover:bg-white transition-all">
+            <button className="flex-1 py-2.5 px-4 border border-red-200 rounded-xl bg-white/70 hover:bg-white transition-all" disabled={isLoading}>
               <i className="fa-brands fa-google text-xl text-red-600"></i>
             </button>
-            <button className="flex-1 py-2.5 px-4 border border-red-200 rounded-xl bg-white/70 hover:bg-white transition-all">
+            <button className="flex-1 py-2.5 px-4 border border-red-200 rounded-xl bg-white/70 hover:bg-white transition-all" disabled={isLoading}>
               <i className="fa-brands fa-apple text-xl text-red-800"></i>
             </button>
-            <button className="flex-1 py-2.5 px-4 border border-red-200 rounded-xl bg-white/70 hover:bg-white transition-all">
+            <button className="flex-1 py-2.5 px-4 border border-red-200 rounded-xl bg-white/70 hover:bg-white transition-all" disabled={isLoading}>
               <i className="fa-brands fa-facebook text-xl text-blue-600"></i>
             </button>
           </div>
