@@ -11,13 +11,13 @@ export default function NewReleases() {
       </div>
       <div className="space-y-4">
         <NewReleaseCard
-          image="https://storage.googleapis.com/uxpilot-auth.appspot.com/366131d9e7-27a4b9270c78fe51bb8e.png"
+          image="/366131d9e7-27a4b9270c78fe51bb8e.png"
           title="La Divina Commedia"
           author="Dante Alighieri"
           rating={4.8}
         />
         <NewReleaseCard
-          image="https://storage.googleapis.com/uxpilot-auth.appspot.com/366131d9e7-27a4b9270c78fe51bb8e.png"
+          image="/366131d9e7-27a4b9270c78fe51bb8e.png"
           title="Il Barone Rampante"
           author="Italo Calvino"
           rating={4.6}

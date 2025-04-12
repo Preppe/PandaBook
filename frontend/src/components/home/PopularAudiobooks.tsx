@@ -11,17 +11,17 @@ export default function PopularAudiobooks() {
       </div>
       <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
         <BookCard
-          image="https://storage.googleapis.com/uxpilot-auth.appspot.com/366131d9e7-27a4b9270c78fe51bb8e.png"
+          image="/366131d9e7-27a4b9270c78fe51bb8e.png"
           title="Il Nome della Rosa"
           author="Umberto Eco"
         />
         <BookCard
-          image="https://storage.googleapis.com/uxpilot-auth.appspot.com/366131d9e7-27a4b9270c78fe51bb8e.png"
+          image="/366131d9e7-27a4b9270c78fe51bb8e.png"
           title="1984"
           author="George Orwell"
         />
         <BookCard
-          image="https://storage.googleapis.com/uxpilot-auth.appspot.com/366131d9e7-27a4b9270c78fe51bb8e.png"
+          image="/366131d9e7-27a4b9270c78fe51bb8e.png"
           title="Orgoglio e Pregiudizio"
           author="Jane Austen"
         />

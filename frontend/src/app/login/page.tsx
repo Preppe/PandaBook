@@ -23,7 +23,7 @@ export default function LoginPage() {
         >
           <img
             className="w-32 h-32 rounded-full shadow-lg"
-            src="https://storage.googleapis.com/uxpilot-auth.appspot.com/366131d9e7-27a4b9270c78fe51bb8e.png"
+            src="/366131d9e7-27a4b9270c78fe51bb8e.png"
             alt="cute red panda mascot logo, warm colors, minimalist illustration style"
           />
           <h1 className="text-2xl font-bold text-red-800 text-center">
