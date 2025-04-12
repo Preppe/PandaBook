@@ -1,0 +1,49 @@
+name: dashboard Docker CI
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'dashboard/**'
+      - '.github/workflows/dashboard-docker-ci.yml'
+  workflow_dispatch:
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.REGISTRY_TOKEN }}
+          fetch-depth: 0
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.REGISTRY_TOKEN }}
+
+      - name: Create .env file
+        run: |
+          echo "${{ secrets.ENV_DASHBOARD }}" > ./dashboard/.env
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: dashboard
+          file: dashboard/Dockerfile
+          push: true
+          platforms: linux/amd64,linux/arm64 # Add this line for multi-platform build
+          tags: ghcr.io/preppe/audiobook/dashboard:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

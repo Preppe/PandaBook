@@ -1,0 +1,44 @@
+import { EntityHelper } from 'src/utils/entity-helper';
+import { Column, CreateDateColumn, Entity, Generated, JoinColumn, OneToMany, OneToOne, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm'; // Added OneToMany
+import { Audio } from './audio.entity';
+import { Chapter } from './chapter.entity'; // Adjusted import path
+
+@Entity()
+export class Book extends EntityHelper {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
+
+  @Column()
+  title: string;
+
+  @Column()
+  author: string;
+
+  @Column({ nullable: true })
+  description: string;
+
+  @Column({ nullable: true })
+  narrator: string;
+
+  @Column({ nullable: true })
+  cover: string;
+
+  @OneToOne(() => Audio, (audio) => audio.id, { cascade: true })
+  @JoinColumn()
+  audio?: Audio | null;
+
+  @Column({ nullable: true })
+  audioId?: string;
+
+  @OneToMany(() => Chapter, (chapter) => chapter.book, {
+    cascade: true, // Optional: cascade operations like save
+    eager: false, // Optional: don't load chapters by default
+  })
+  chapters: Chapter[];
+}
