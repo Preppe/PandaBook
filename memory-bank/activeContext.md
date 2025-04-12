@@ -27,6 +27,12 @@ Tracks the current work focus, recent changes, next steps, and active decisions 
     - Removed unused `AuthContext.tsx` file.
 - Refactored `layout.tsx` (Server Component) to use a new `ClientAuthWrapper.tsx` (Client Component). This resolves conflicts between server-side `metadata` export and client-side hooks/state initialization (e.g., `useEffect`, Zustand store hydration) needed for authentication checks within the layout.
 - Completed UI component refactoring (PlayButton, NewReleaseCard, BookCard).
+- [2025-04-12 20:31:17] Enforced React Query + Zustand pattern for authentication/session management:
+    - Removed all direct calls to authStore stubs (`login`, `checkSession`), which now throw errors if called.
+    - Refactored login page to use `useLoginUser` mutation and update Zustand store on success/error.
+    - Refactored ClientAuthWrapper to use `useCurrentUser` and update store state.
+    - Split Next.js layout: kept metadata export in server component, moved QueryClientProvider and all client logic to `ClientLayout` client component.
+    - Authentication/session flow is now robust, modular, and fully Next.js-compliant.
 ## Next Steps
 
 - Refactor all frontend API and state logic to use the new unified models for all book, audio, chapter, and user operations.
