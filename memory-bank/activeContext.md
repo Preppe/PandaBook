@@ -6,9 +6,13 @@ Tracks the current work focus, recent changes, next steps, and active decisions 
 
 ## Current Focus
 
+- Aligned and synchronized all backend entities (Book, Audio, Chapter, User, etc.) with new TypeScript interfaces in the frontend for full structural and type consistency.
 - Refactoring frontend authentication state management from React Context to Zustand.
 ## Recent Changes
 
+- Created and integrated unified frontend models for Book, Audio, Chapter, User, Role, and Status to match backend entities.
+- Updated API config to import and use these models, ensuring type safety and consistency.
+- Deprecated legacy frontend models in favor of unified interfaces.
 - Implemented frontend authentication:
     - Created API client for authentication endpoints (`authClient.ts`).
     - Refactored global state management from `AuthContext` to Zustand (`useAuthStore`).
@@ -20,6 +24,7 @@ Tracks the current work focus, recent changes, next steps, and active decisions 
 - Completed UI component refactoring (PlayButton, NewReleaseCard, BookCard).
 ## Next Steps
 
+- Refactor all frontend API and state logic to use the new unified models for all book, audio, chapter, and user operations.
 - Implement refresh token handling for improved session persistence.
 - Add user profile display/management page.
 - Consider social login integration options (e.g., Google).
