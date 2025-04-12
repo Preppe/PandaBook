@@ -44,10 +44,20 @@ const getRefreshToken = (): string | null => {
  * @param accessToken - The access token.
  * * @param refreshToken - The refresh token.
  */
+/**
+ * Stores access and refresh tokens in localStorage, with validation.
+ * Throws an error if accessToken is missing or invalid.
+ */
 const setTokens = (accessToken: string, refreshToken: string): void => {
   if (typeof window === 'undefined') return;
+  if (!accessToken || typeof accessToken !== 'string' || accessToken === 'undefined') {
+    console.error('setTokens: accessToken is missing or invalid:', accessToken);
+    throw new Error('Token non ricevuto dalla risposta di login');
+  }
   localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
-  localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
+  if (refreshToken && typeof refreshToken === 'string' && refreshToken !== 'undefined') {
+    localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
+  }
 };
 
 /**
@@ -64,8 +74,9 @@ const removeTokens = (): void => {
 const { baseUrl, endpoints } = config.api;
 
 interface LoginResponse {
-  accessToken: string;
+  token: string;
   refreshToken: string;
+  tokenExpires: number;
   user: User;
 }
 
@@ -127,7 +138,7 @@ export const loginUser = async (credentials: LoginDto): Promise<User> => {
     method: 'POST',
     body: JSON.stringify(credentials),
   });
-  setTokens(response.accessToken, response.refreshToken);
+  setTokens(response.token, response.refreshToken);
   return response.user;
 };
 

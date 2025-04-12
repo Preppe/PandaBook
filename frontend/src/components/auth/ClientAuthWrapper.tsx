@@ -31,11 +31,7 @@ export function ClientAuthWrapper({ children }: ClientAuthWrapperProps) {
   return (
     <>
       {showLayout && <Header />} {/* Conditionally render Header */}
-      <main className={cn(
-        // Add padding only when Header and BottomNav are shown to prevent content overlap
-        // Adjust these values based on your Header/BottomNav heights
-        showLayout ? 'pt-16 pb-16' : ''
-      )}>
+      <main>
         <AuthGuard>{children}</AuthGuard> {/* AuthGuard now wraps only the children */}
       </main>
       {showLayout && <BottomNav />} {/* Conditionally render BottomNav */}
