@@ -1,11 +1,9 @@
 import { create, StateCreator } from 'zustand'; // Import StateCreator
-import {
-    loginUser,
-    logoutUser,
-    fetchCurrentUser,
-    User,
-    LoginDto, // Use the DTO defined in authClient for credentials
-} from '../api/authClient';
+import { User } from '../models/User';
+import { LoginDto } from '../api/authClient';
+// NOTE: loginUser, logoutUser, and fetchCurrentUser are not exported from authClient.
+// Use the React Query hooks (useLoginUser, useLogoutUser, useCurrentUser) in your components instead.
+// Then update the store state based on the results of those hooks.
 
 interface AuthState {
     isAuthenticated: boolean;
@@ -36,43 +34,22 @@ const useAuthStore = create<AuthState & AuthActions>((set) => ({
         set({ isLoading: loading });
     },
 
-    login: async (credentials: LoginDto) => {
-        set({ isLoading: true });
-        try {
-            const user = await loginUser(credentials);
-            set({ user, isAuthenticated: true, isLoading: false });
-        } catch (error) {
-            console.error('Login failed:', error);
-            set({ user: null, isAuthenticated: false, isLoading: false });
-            // Re-throw to allow UI components to handle login failure (e.g., show error message)
-            throw error;
-        }
+    login: async (_credentials: LoginDto) => {
+        // This function is a stub. Use the useLoginUser hook in your React component,
+        // then update the store state based on the result.
+        throw new Error('login() should be handled via useLoginUser hook in a React component.');
     },
 
     logout: async () => {
-        set({ isLoading: true });
-        try {
-            await logoutUser();
-            set({ user: null, isAuthenticated: false, isLoading: false });
-        } catch (error) {
-            console.error('Logout failed:', error);
-            // Still reset state locally even if backend logout fails
-            set({ user: null, isAuthenticated: false, isLoading: false });
-            // Re-throw to allow UI components to handle logout failure if needed
-            throw error;
-        }
+        // This function is a stub. Use the useLogoutUser hook in your React component,
+        // then update the store state based on the result.
+        throw new Error('logout() should be handled via useLogoutUser hook in a React component.');
     },
 
     checkSession: async () => {
-        // isLoading is initially true, set it to false only after the check completes
-        try {
-            const user = await fetchCurrentUser();
-            set({ user, isAuthenticated: !!user, isLoading: false });
-        } catch (error) {
-            console.error('Session check failed:', error);
-            // If session check fails (e.g., network error, invalid token), treat as logged out
-            set({ user: null, isAuthenticated: false, isLoading: false });
-        }
+        // This function is a stub. Use the useCurrentUser hook in your React component,
+        // then update the store state based on the result.
+        throw new Error('checkSession() should be handled via useCurrentUser hook in a React component.');
     },
 }));
 

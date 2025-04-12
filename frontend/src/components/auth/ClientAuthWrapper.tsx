@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, ReactNode } from 'react';
+import { useCurrentUser } from '@/lib/api/authClient';
 import { usePathname } from 'next/navigation'; // Import usePathname
 import useAuthStore from '@/lib/store/authStore';
 import { AuthGuard } from '@/components/auth/AuthGuard';
@@ -15,10 +16,13 @@ interface ClientAuthWrapperProps {
 export function ClientAuthWrapper({ children }: ClientAuthWrapperProps) {
   const pathname = usePathname(); // Get current path
 
+  // Use the useCurrentUser hook to check session and update store
+  const { data: user, isLoading } = useCurrentUser();
+
   useEffect(() => {
-    // Check session on initial load
-    useAuthStore.getState().checkSession();
-  }, []);
+    useAuthStore.getState().setUser(user ?? null);
+    useAuthStore.getState().setLoading(isLoading);
+  }, [user, isLoading]);
 
   // Define paths where Header and BottomNav should be hidden
   const hideLayoutPaths = ['/login'];

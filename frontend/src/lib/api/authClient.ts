@@ -3,7 +3,6 @@ import type { User } from '../models/User';
 import apiClient from './apiClient';
 import tokenManager from './tokenManager';
 import { refreshTokens } from './refreshManager';
-import { config } from '../config';
 
 // --- Type Definitions (Based on backend API) ---
 
@@ -26,7 +25,6 @@ interface RefreshResponse {
 }
 
 // --- API Endpoints ---
-const { endpoints } = config.api;
 
 // --- TanStack Query Hooks ---
 
@@ -35,7 +33,7 @@ export function useLoginUser(options?: UseMutationOptions<User, Error, LoginDto>
   const queryClient = useQueryClient();
   return useMutation<User, Error, LoginDto>({
     mutationFn: async (credentials: LoginDto) => {
-      const response = await apiClient(endpoints.auth.login, {
+      const response = await apiClient('/auth/email/login', {
         method: 'POST',
         body: JSON.stringify(credentials),
       });
@@ -62,7 +60,7 @@ export function useLogoutUser(options?: UseMutationOptions<void, Error, void>) {
       try {
         const refreshToken = tokenManager.getRefreshToken();
         if (refreshToken) {
-          await apiClient(endpoints.auth.logout, {
+          await apiClient('/auth/logout', {
             method: 'POST',
             // Optionally send refreshToken in body if backend expects it
             // body: JSON.stringify({ refreshToken }),
@@ -91,7 +89,7 @@ export function useCurrentUser(options?: UseQueryOptions<User | null, Error>) {
       const accessToken = tokenManager.getAccessToken();
       if (!accessToken) return null;
       try {
-        const user = await apiClient(endpoints.auth.me, { method: 'GET' });
+        const user = await apiClient('/auth/me', { method: 'GET' });
         return user;
       } catch (error: any) {
         if (error.message?.includes('401')) {
@@ -111,7 +109,7 @@ export function useRefreshAccessToken(options?: UseMutationOptions<string | null
   return useMutation<string | null, Error, void>({
     mutationFn: async () => {
       try {
-        const apiBaseUrl = config.api.baseUrl;
+        const apiBaseUrl = '/auth/refresh-token';
         const { accessToken, refreshToken } = await refreshTokens(apiBaseUrl);
         return accessToken;
       } catch (error) {

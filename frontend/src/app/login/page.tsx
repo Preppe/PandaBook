@@ -4,13 +4,14 @@ import React, { useState, useEffect, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 // import { useAuth } from '../../context/AuthContext'; // Remove old context import
 import useAuthStore from '@/lib/store/authStore'; // Import Zustand store
+import { useLoginUser } from '@/lib/api/authClient';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   // Get state and actions from Zustand store
-  const { login, isLoading, isAuthenticated } = useAuthStore();
+  const { setUser, setLoading, isLoading, isAuthenticated } = useAuthStore();
   // Note: 'user' object is not directly needed for the login page logic here
   const router = useRouter();
 
@@ -24,6 +25,17 @@ export default function LoginPage() {
     }
   }, [isAuthenticated, isLoading, router]);
 
+  const { mutateAsync: loginMutate, isLoading: isLoginLoading } = useLoginUser({
+    onSuccess: (user) => {
+      setUser(user);
+      setLoading(false);
+    },
+    onError: (err: any) => {
+      setError(err.message || 'Login failed. Please check your credentials.');
+      setLoading(false);
+    }
+  });
+
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null); // Clear previous errors
@@ -33,15 +45,13 @@ export default function LoginPage() {
       return;
     }
 
+    setLoading(true);
     try {
-      await login({ email, password });
+      await loginMutate({ email, password });
       // Login successful, the useEffect above should handle redirection
-      // Or you could explicitly redirect here if preferred:
-      // router.push('/');
     } catch (err: any) {
-      console.error('Login page error:', err);
-      // Set error message based on the error thrown from AuthContext
-      setError(err.message || 'Login failed. Please check your credentials.');
+      // Error is handled in onError above
+      setLoading(false);
     }
   };
 
