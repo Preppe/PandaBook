@@ -7,12 +7,17 @@ Tracks the current work focus, recent changes, next steps, and active decisions 
 ## Current Focus
 
 - Aligned and synchronized all backend entities (Book, Audio, Chapter, User, etc.) with new TypeScript interfaces in the frontend for full structural and type consistency.
+- Refactored `frontend/src/lib/api/authClient.ts` to use TanStack Query (react-query) hooks for authentication (login, logout, current user, refresh token), removing local User interface in favor of the model.
+- Created `frontend/src/lib/api/bookClient.ts` with TanStack Query hooks for paginated book listing, single book fetch, create, update, and delete, using nestjs-paginate response structure.
 - Refactoring frontend authentication state management from React Context to Zustand.
 ## Recent Changes
 
 - Created and integrated unified frontend models for Book, Audio, Chapter, User, Role, and Status to match backend entities.
 - Updated API config to import and use these models, ensuring type safety and consistency.
 - Deprecated legacy frontend models in favor of unified interfaces.
+- Refactored API clients to use TanStack Query for both authentication and book operations.
+- Ensured all endpoints are compatible with backend nestjs-paginate structure and resolved config issues by using string literals for book endpoints.
+- Removed create, update, and delete mutations from `bookClient.ts` as these are managed by the dashboard; frontend now only exposes read endpoints.
 - Implemented frontend authentication:
     - Created API client for authentication endpoints (`authClient.ts`).
     - Refactored global state management from `AuthContext` to Zustand (`useAuthStore`).
