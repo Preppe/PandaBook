@@ -1,6 +1,6 @@
 import { useQuery, UseQueryOptions } from '@tanstack/react-query';
-import { config } from '../config';
 import type { Book } from '../models/Book';
+import apiClient from './apiClient';
 
 // --- Paginate Types (nestjs-paginate) ---
 export interface PaginateMeta {
@@ -25,34 +25,6 @@ export interface Paginate<Book> {
 }
 
 // --- API Client Helper ---
-const { baseUrl } = config.api;
-
-const apiClient = async <T>(
-  endpoint: string,
-  options: RequestInit = {}
-): Promise<T> => {
-  const url = `${baseUrl}${endpoint}`;
-  const headers = {
-    'Content-Type': 'application/json',
-    ...options.headers,
-  };
-
-  const response = await fetch(url, { ...options, headers });
-
-  if (!response.ok) {
-    let errorData;
-    try {
-      errorData = await response.json();
-    } catch (e) {}
-    throw new Error(errorData?.message || `HTTP error! status: ${response.status}`);
-  }
-
-  if (response.status === 204) {
-    return undefined as T;
-  }
-
-  return (await response.json()) as T;
-};
 
 // --- TanStack Query Hooks ---
 
@@ -68,7 +40,7 @@ export function useBooks(
 
   return useQuery<Paginate<Book>, Error>({
     queryKey: ['books', params],
-    queryFn: () => apiClient<Paginate<Book>>(url),
+    queryFn: () => apiClient(url),
     ...options,
   });
 }
@@ -82,7 +54,7 @@ export function useBook(
 
   return useQuery<Book, Error>({
     queryKey: ['book', bookId],
-    queryFn: () => apiClient<Book>(endpoint),
+    queryFn: () => apiClient(endpoint),
     ...options,
   });
 }
