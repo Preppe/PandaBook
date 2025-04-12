@@ -1,6 +1,6 @@
 /**
  * RefreshManager: Handles token refresh logic.
- * - Uses refreshToken in a custom header (e.g., 'x-refresh-token'), never the accessToken.
+ * - Uses refreshToken in the standard Authorization header as Bearer, never the accessToken.
  * - Modular and testable.
  * - No hardcoded secrets or env vars.
  */
@@ -14,44 +14,46 @@ export interface RefreshResponse {
 }
 
 const REFRESH_ENDPOINT = '/auth/refresh'; // Relative path, configurable if needed
-const REFRESH_HEADER = 'x-refresh-token';
 
 export async function refreshTokens(apiBaseUrl: string): Promise<RefreshResponse> {
-  const refreshToken = tokenManager.getRefreshToken();
-  if (!refreshToken) {
+  const storedRefreshToken = tokenManager.getRefreshToken();
+  if (!storedRefreshToken) {
     throw { message: 'No refresh token available' } as ApiError;
   }
 
   try {
-    const response = await fetch(`${apiBaseUrl}${REFRESH_ENDPOINT}`, {
+    const response: Response = await fetch(`${apiBaseUrl}${REFRESH_ENDPOINT}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        [REFRESH_HEADER]: refreshToken,
+        'Authorization': `Bearer ${storedRefreshToken}`,
       },
       // No accessToken attached!
       body: JSON.stringify({}),
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
+      const errorData: any = await response.json().catch(() => ({}));
       throw handleApiError({ response: { status: response.status, data: errorData } });
     }
 
-    const data = await response.json();
-    if (!data.accessToken || !data.refreshToken) {
+    const data: any = await response.json();
+    // Accept both 'accessToken' or 'token' for compatibility
+    const accessToken: string = data.accessToken || data.token;
+    const newRefreshToken: string = data.refreshToken;
+    if (!accessToken || !newRefreshToken) {
       throw { message: 'Invalid refresh response', data } as ApiError;
     }
 
     // Update tokens in TokenManager
     tokenManager.setTokens({
-      accessToken: data.accessToken,
-      refreshToken: data.refreshToken,
+      accessToken,
+      refreshToken: newRefreshToken,
     });
 
     return {
-      accessToken: data.accessToken,
-      refreshToken: data.refreshToken,
+      accessToken,
+      refreshToken: newRefreshToken,
     };
   } catch (error) {
     throw handleApiError(error);
