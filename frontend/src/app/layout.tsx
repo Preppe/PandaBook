@@ -1,7 +1,6 @@
 import './globals.css';
 import { cn } from '@/lib/utils';
-import BottomNav from '@/components/ui/layout/BottomNav';
-import Header from '@/components/ui/layout/Header';
+// Header and BottomNav imports removed - handled by ClientAuthWrapper
 // AuthProvider, useAuthStore, AuthGuard imports removed
 import { ClientAuthWrapper } from '@/components/auth/ClientAuthWrapper'; // Import the new wrapper
 
@@ -49,12 +48,9 @@ export default function RootLayout({
            *      return <AuthGuard>{children}</AuthGuard>;
            *    }
            */}
-          <Header /> {/* Header might need access to auth state */}
-          <main> {/* Add padding to avoid overlap with fixed Header/BottomNav */}
-             {children}
-          </main>
-          <BottomNav /> {/* BottomNav might need access to auth state */}
-          {/* AuthGuard removed */}
+          {/* Header, main wrapping, and BottomNav are now rendered conditionally inside ClientAuthWrapper */}
+          {children}
+          {/* AuthGuard is applied inside ClientAuthWrapper */}
         </ClientAuthWrapper> {/* Close the wrapper */}
         {/* AuthProvider removed */}
       </body>
