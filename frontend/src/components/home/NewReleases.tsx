@@ -10,9 +10,6 @@ export default function NewReleases() {
     sortBy: "createdAt",
     sortOrder: "DESC",
   });
-  {
-    console.log(data);
-  }
 
   return (
     <div className="px-6 py-4">
