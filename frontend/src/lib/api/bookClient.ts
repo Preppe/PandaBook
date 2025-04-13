@@ -19,7 +19,7 @@ export interface PaginateLinks {
 }
 
 export interface Paginate<Book> {
-  items: Book[];
+  data: Book[];
   meta: PaginateMeta;
   links: PaginateLinks;
 }

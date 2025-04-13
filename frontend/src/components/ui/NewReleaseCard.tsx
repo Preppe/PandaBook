@@ -16,6 +16,7 @@ export default function NewReleaseCard({
   rating,
   onPlay,
 }: NewReleaseCardProps) {
+  console.log(title)
   return (
     <div className="flex gap-4 items-center">
       <img
