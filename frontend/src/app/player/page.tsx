@@ -1,12 +1,33 @@
 "use client";
 
-import React from "react";
-import Image from "next/image"; // Using next/image for optimized images
+import React, { useEffect } from "react"; // Import useEffect
+import Image from "next/image";
+import { useRouter } from "next/navigation"; // Import useRouter
 import useAudioStore from "../../lib/store/audioStore";
 
 const PlayerPage = () => {
-  const { isPlaying, currentTime, duration, togglePlayPause, setCurrentTime } =
-    useAudioStore();
+  const {
+    isPlaying,
+    currentTime,
+    duration,
+    togglePlayPause,
+    setCurrentTime,
+    setIsFullPlayerVisible, // Get action to control full player visibility
+    setIsMiniPlayerActive, // Get action to control mini-player activity
+  } = useAudioStore();
+  const router = useRouter(); // Get router instance
+
+  // Set full player visible when this page is mounted
+  // Set full player visible and mini-player inactive when this page is mounted
+  useEffect(() => {
+    setIsFullPlayerVisible(true);
+    setIsMiniPlayerActive(false); // Deactivate mini-player when full player is visible
+    return () => {
+      // Set full player invisible when this page is unmounted
+      setIsFullPlayerVisible(false);
+      // Note: Mini-player activation on unmount is handled in handleClosePlayer
+    };
+  }, [setIsFullPlayerVisible, setIsMiniPlayerActive]); // Add setIsMiniPlayerActive to dependencies
 
   // Helper function to format time
   const formatTime = (time: number) => {
@@ -15,12 +36,19 @@ const PlayerPage = () => {
     return `${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
   };
 
+  // Handle close button click
+  const handleClosePlayer = () => {
+    setIsFullPlayerVisible(false); // Hide full player
+    setIsMiniPlayerActive(true); // Activate mini-player
+    router.back(); // Navigate back to the previous page
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-orange-50 to-orange-100 text-red-800">
       {/* Header */}
       <div id="player-header" className="px-6 pt-12 pb-4">
         <div className="flex justify-between items-center">
-          <button className="text-red-800">
+          <button className="text-red-800" onClick={handleClosePlayer}> {/* Add onClick handler */}
             <i className="fa-solid fa-chevron-down text-xl"></i>
           </button>
           <span className="font-medium">In riproduzione</span>

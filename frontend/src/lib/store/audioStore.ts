@@ -1,5 +1,13 @@
 import { create } from 'zustand';
 
+interface TrackInfo {
+  id: string; // Assuming a unique ID for the track
+  title: string;
+  artist: string;
+  coverImageUrl?: string; // Optional cover image URL
+  audioUrl: string; // URL for the audio file
+}
+
 interface AudioState {
   isPlaying: boolean;
   volume: number;
@@ -7,6 +15,9 @@ interface AudioState {
   duration: number;
   src: string | null;
   audioElement: HTMLAudioElement | null;
+  currentTrack: TrackInfo | null;
+  isFullPlayerVisible: boolean; // Added state for full player visibility
+  isMiniPlayerActive: boolean; // Added state for mini-player activity
 }
 
 interface AudioActions {
@@ -19,6 +30,9 @@ interface AudioActions {
   setSrc: (src: string | null) => void;
   updateCurrentTime: (time: number) => void;
   updateDuration: (duration: number) => void;
+  setCurrentTrack: (track: TrackInfo | null) => void;
+  setIsFullPlayerVisible: (visible: boolean) => void; // Added action to control full player visibility
+  setIsMiniPlayerActive: (active: boolean) => void; // Added action to control mini-player activity
 }
 
 const useAudioStore = create<AudioState & AudioActions>((set, get) => ({
@@ -28,6 +42,9 @@ const useAudioStore = create<AudioState & AudioActions>((set, get) => ({
   duration: 0,
   src: null,
   audioElement: null,
+  currentTrack: null,
+  isFullPlayerVisible: false, // Initial state: full player is hidden
+  isMiniPlayerActive: false, // Initial state: mini-player is inactive
 
   setAudioElement: (element) => set({ audioElement: element }),
 
@@ -87,6 +104,18 @@ const useAudioStore = create<AudioState & AudioActions>((set, get) => ({
 
   updateCurrentTime: (time) => set({ currentTime: time }),
   updateDuration: (duration) => set({ duration: duration }),
+
+  setCurrentTrack: (track) => {
+    set({ currentTrack: track, isMiniPlayerActive: track !== null }); // Activate mini-player when a track is set
+    if (track) {
+      get().setSrc(track.audioUrl);
+    } else {
+      get().setSrc(null);
+    }
+  },
+
+  setIsFullPlayerVisible: (visible) => set({ isFullPlayerVisible: visible }),
+  setIsMiniPlayerActive: (active) => set({ isMiniPlayerActive: active }),
 }));
 
 export default useAudioStore;
