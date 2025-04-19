@@ -28,3 +28,13 @@
 [2025-04-19 17:29:00] - Implemented persistence for `currentTrack` in `useAudioStore` using Zustand `persist` middleware and `localStorage`.
 [2025-04-19 17:29:00] - Added rehydration logic in `ClientLayout` to restore audio source and mini-player visibility from persisted state on page load.
 [2025-04-19 18:49:26] - Created frontend API client `frontend/src/lib/api/progressClient.ts` with `useFetchProgress` hook using TanStack Query to fetch user-specific book progress from `GET /api/v1/progress/:userId/:bookId`.
+[2025-04-19 19:33:53] - Implemented backend WebSocket gateway (`progress.gateway.ts`) to receive `updateProgress` and save to Redis.
+[2025-04-19 19:33:53] - Implemented backend service (`progress.service.ts`) and controller (`progress.controller.ts`) for `GET /api/v1/progress/:bookId` endpoint to retrieve progress from Redis.
+[2025-04-19 19:33:53] - Implemented frontend WebSocket hook (`useWebSocket.ts`).
+[2025-04-19 19:33:53] - Implemented frontend API client (`progressClient.ts`) with `useFetchProgress` hook.
+[2025-04-19 19:33:53] - Implemented throttled progress updates during playback in `AudioPlayer.tsx`.
+[2025-04-19 19:33:53] - Implemented immediate final progress saving on `pause` event in `AudioPlayer.tsx`.
+[2025-04-19 19:33:53] - Implemented resume playback logic in `AudioPlayer.tsx` using `useFetchProgress` and `useRef` flags.
+[2025-04-19 19:33:53] - Fixed resume playback bugs related to page refresh and track switching.
+[2025-04-19 19:33:53] - Optimized related code (removed logs, comments, redundant handlers, corrected endpoint signature).
+[2025-04-19 19:33:53] - Moved `@types/lodash.throttle` to `devDependencies`.

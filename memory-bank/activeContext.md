@@ -6,11 +6,7 @@ Tracks the current work focus, recent changes, next steps, and active decisions 
 
 ## Current Focus
 
-- Aligned and synchronized all backend entities (Book, Audio, Chapter, User, etc.) with new TypeScript interfaces in the frontend for full structural and type consistency.
-- Refactored `frontend/src/lib/api/authClient.ts` to use TanStack Query (react-query) hooks for authentication (login, logout, current user, refresh token), removing local User interface in favor of the model.
-- Created `frontend/src/lib/api/bookClient.ts` with TanStack Query hooks for paginated book listing, single book fetch, create, update, and delete, using nestjs-paginate response structure.
-- Implementing audio playback functionality, including fetching stream URL, updating player UI, and managing state with Zustand.
-- Implementing persistence for audio player state (`currentTrack`) using localStorage.
+- Completed implementation and optimization of the audio progress tracking and resume playback feature.
 ## Recent Changes
 
 - Created and integrated unified frontend models for Book, Audio, Chapter, User, Role, and Status to match backend entities.
@@ -53,6 +49,14 @@ Tracks the current work focus, recent changes, next steps, and active decisions 
     - Modified `useAudioStore` (`setCurrentTrack`) to accept a `Book` object instead of `TrackInfo`.
     - Moved stream URL construction (`/api/v1/books/:id/stream`) logic into `useAudioStore`.
     - Updated `NewReleaseCard` to pass the `Book` object directly to `setCurrentTrack`.
+- [2025-04-19 19:34:04] - Completed implementation and optimization of audio progress tracking and resume playback:
+    - Implemented backend WebSocket gateway (`progress.gateway.ts`) and REST endpoint (`progress.controller.ts`, `progress.service.ts`) using Redis for storage.
+    - Implemented frontend WebSocket hook (`useWebSocket.ts`), API client (`progressClient.ts`), and integrated into `AudioPlayer.tsx`.
+    - Handled real-time updates via WebSocket (`updateProgress`) and fetching initial progress via REST (`GET /api/v1/progress/:bookId`).
+    - Implemented throttled updates during playback and immediate saving on pause/close.
+    - Used `useRef` flags in `AudioPlayer.tsx` to manage asynchronous loading and prevent race conditions for reliable resume playback.
+    - Refactored backend to use JWT for user ID and frontend to use appropriate hooks and state management (`useAuthStore`, `useAudioStore`).
+    - Optimized code and dependencies.
 ## Next Steps
 
 - Refactor all frontend API and state logic to use the new unified models for all book, audio, chapter, and user operations.

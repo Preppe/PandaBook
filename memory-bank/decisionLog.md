@@ -26,3 +26,8 @@
 - Uses shared `apiClient` and TanStack Query (`useFetchProgress` hook).
 - Targets existing backend endpoint: `GET /api/v1/progress/:userId/:bookId`.
 - Aligned with patterns in `authClient.ts` and `bookClient.ts`.
+[2025-04-19 19:33:39] - Decided to use WebSocket (socket.io) for real-time progress updates (`updateProgress` event) stored in Redis.
+[2025-04-19 19:33:39] - Decided to create a backend REST endpoint (`GET /api/v1/progress/:bookId`) protected by JWT to fetch saved progress from Redis for resume functionality.
+[2025-04-19 19:33:39] - Decided to handle final progress saving on the frontend `pause` event (triggered by pause/close) rather than a separate backend WebSocket event.
+[2025-04-19 19:33:39] - Decided to use `useRef` flags in `AudioPlayer.tsx` to manage the timing of fetching progress and loading metadata for reliable resume playback, especially on refresh/track switch.
+[2025-04-19 19:33:39] - Decided to refactor the backend progress controller endpoint to get `userId` from JWT instead of URL param.
