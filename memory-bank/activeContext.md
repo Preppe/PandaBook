@@ -33,6 +33,14 @@ Tracks the current work focus, recent changes, next steps, and active decisions 
     - Refactored ClientAuthWrapper to use `useCurrentUser` and update store state.
     - Split Next.js layout: kept metadata export in server component, moved QueryClientProvider and all client logic to `ClientLayout` client component.
     - Authentication/session flow is now robust, modular, and fully Next.js-compliant.
+- [2025-04-19 13:14:40] Implemented the mini-player component:
+    - Created `MiniPlayer.tsx` for the fixed mini-player UI.
+    - Updated `useAudioStore` with `currentTrack`, `isFullPlayerVisible`, and `isMiniPlayerActive` states and actions.
+    - Integrated `MiniPlayer` into `ClientLayout.tsx` with conditional rendering based on `isMiniPlayerActive`.
+    - Added logic to `frontend/src/app/player/page.tsx` to control `isFullPlayerVisible` and `isMiniPlayerActive` on mount/unmount and close button click.
+    - Implemented click handling on `MiniPlayer` to open the full player and stop propagation on controls.
+    - Added logic to pause audio when the mini-player close button is clicked.
+    - Adjusted mini-player vertical position (`bottom-16`) and z-index (`zIndex: 1000`).
 ## Next Steps
 
 - Refactor all frontend API and state logic to use the new unified models for all book, audio, chapter, and user operations.

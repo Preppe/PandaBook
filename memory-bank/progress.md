@@ -12,3 +12,9 @@
 - Split Next.js layout: kept metadata export in server component, moved QueryClientProvider and all client logic to `ClientLayout` client component.
 - Authentication/session flow is now robust, modular, and fully Next.js-compliant.
 - Memory Bank updated accordingly.
+[2025-04-19 12:34:08] - Created Zustand store for audio player state management (`frontend/src/lib/store/audioStore.ts`).
+[2025-04-19 12:34:08] - Created `AudioPlayer` component (`frontend/src/components/AudioPlayer.tsx`) to house the `<audio>` element and connect to the Zustand store.
+[2025-04-19 12:34:08] - Moved `AudioPlayer` component to the root layout (`frontend/src/app/layout.tsx`).
+[2025-04-19 12:34:08] - Updated player page (`frontend/src/app/player/page.tsx`) to connect existing UI controls (play/pause button, progress bar) to the Zustand store.
+[2025-04-19 12:34:08] - Removed duplicate basic controls from `AudioPlayer.tsx`.
+[2025-04-19 13:14:30] - Completed implementation of the mini-player component, including state management for visibility, basic controls, and integration into the main layout.
