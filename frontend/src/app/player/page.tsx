@@ -14,6 +14,7 @@ const PlayerPage = () => {
     setCurrentTime,
     setIsFullPlayerVisible, // Get action to control full player visibility
     setIsMiniPlayerActive, // Get action to control mini-player activity
+    currentTrack, // Get current track info
   } = useAudioStore();
   const router = useRouter(); // Get router instance
 
@@ -61,25 +62,27 @@ const PlayerPage = () => {
       {/* Book Cover */}
       <div id="book-cover" className="px-6 py-8">
         <div className="relative w-64 h-64 mx-auto">
-          {/* Using placeholder for image source, replace with actual data later */}
-          <Image
-            src="/366131d9e7-27a4b9270c78fe51bb8e.png"
-            alt="Book Cover"
+          {/* Use currentTrack cover image or a default */}
+          {/* <Image
+            src={currentTrack?.coverImageUrl || "/placeholder.jpg"} // Use actual cover or placeholder
+            alt={currentTrack?.title || "Book Cover"} // Use actual title or default alt
             width={256} // specify width
             height={256} // specify height
             className="rounded-3xl shadow-2xl object-cover"
-          />
+            priority // Prioritize loading the cover image
+          /> */}
         </div>
       </div>
 
       {/* Book Info */}
       <div id="book-info" className="px-6 text-center">
-        <h1 className="text-2xl font-bold mb-2">Il Piccolo Principe</h1>
-        <p className="text-red-600">Antoine de Saint-Exupéry</p>
-        <div className="flex items-center justify-center gap-2 mt-2">
+        <h1 className="text-2xl font-bold mb-2">{currentTrack?.title || "Loading..."}</h1>
+        <p className="text-red-600">{currentTrack?.artist || "Unknown Artist"}</p>
+        {/* Rating might need separate data source or be part of TrackInfo */}
+        {/* <div className="flex items-center justify-center gap-2 mt-2">
           <i className="fa-solid fa-star text-yellow-400"></i>
           <span className="text-red-600">4.8</span>
-        </div>
+        </div> */}
       </div>
 
       {/* Progress Bar */}

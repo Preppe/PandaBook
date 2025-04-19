@@ -45,12 +45,17 @@ const MiniPlayer = () => {
       {/* Track Info */}
       <div className="flex items-center gap-3">
         <div className="relative w-10 h-10 flex-shrink-0">
-          {/* Using placeholder for image source, replace with actual data later */}
+          {/* Validate coverImageUrl before using, otherwise use placeholder */}
           <Image
-            src={currentTrack?.coverImageUrl || "/placeholder.jpg"} // Use optional chaining
-            alt="Book Cover"
+            src={
+              currentTrack?.coverImageUrl &&
+              (currentTrack.coverImageUrl.startsWith('http') || currentTrack.coverImageUrl.startsWith('/'))
+                ? currentTrack.coverImageUrl
+                : "/placeholder.jpg" // Default placeholder
+            }
+            alt={currentTrack?.title || "Book Cover"} // Use actual title or default alt
             fill // Use fill for responsive image in container
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            sizes="(max-width: 768px) 10vw, 40px" // Adjusted sizes for small image
             className="rounded-md object-cover"
           />
         </div>

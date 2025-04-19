@@ -1,6 +1,7 @@
 import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
 
-interface TrackInfo {
+export interface TrackInfo {
   id: string; // Assuming a unique ID for the track
   title: string;
   artist: string;
@@ -35,7 +36,9 @@ interface AudioActions {
   setIsMiniPlayerActive: (active: boolean) => void; // Added action to control mini-player activity
 }
 
-const useAudioStore = create<AudioState & AudioActions>((set, get) => ({
+const useAudioStore = create<AudioState & AudioActions>()(
+  persist(
+    (set, get) => ({
   isPlaying: false,
   volume: 1, // Default volume
   currentTime: 0,
@@ -116,6 +119,21 @@ const useAudioStore = create<AudioState & AudioActions>((set, get) => ({
 
   setIsFullPlayerVisible: (visible) => set({ isFullPlayerVisible: visible }),
   setIsMiniPlayerActive: (active) => set({ isMiniPlayerActive: active }),
-}));
+    }),
+    {
+      name: 'audio-storage', // Unique name for localStorage key
+      storage: createJSONStorage(() => localStorage), // Use localStorage
+      partialize: (state) => ({ currentTrack: state.currentTrack }), // Only persist currentTrack
+      // Optional: Add logic here to re-set the src when the store is rehydrated
+      // onRehydrateStorage: () => (state) => {
+      //   if (state?.currentTrack) {
+      //     state.setSrc(state.currentTrack.audioUrl);
+      //     // Potentially set isMiniPlayerActive based on persisted track
+      //     state.setIsMiniPlayerActive(true);
+      //   }
+      // }
+    }
+  )
+);
 
 export default useAudioStore;

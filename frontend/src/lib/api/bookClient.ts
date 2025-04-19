@@ -1,5 +1,6 @@
 import { useQuery, UseQueryOptions } from '@tanstack/react-query';
 import type { Book } from '../models/Book';
+import type { Audio } from '../models/Audio';
 import apiClient from './apiClient';
 
 // --- Paginate Types (nestjs-paginate) ---
@@ -54,6 +55,20 @@ export function useBook(
 
   return useQuery<Book, Error>({
     queryKey: ['book', bookId],
+    queryFn: () => apiClient(endpoint),
+    ...options,
+  });
+}
+
+// 3. Book Audio Metadata Fetch
+export function useBookAudio(
+  bookId: string,
+  options?: UseQueryOptions<Audio, Error>
+) {
+  const endpoint = `/books/audio/${bookId}`;
+
+  return useQuery<Audio, Error>({
+    queryKey: ['bookAudio', bookId],
     queryFn: () => apiClient(endpoint),
     ...options,
   });

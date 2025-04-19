@@ -78,19 +78,12 @@ const AudioPlayer: React.FC = () => {
     }
   }, [isPlaying]); // Dependency on isPlaying
 
-  // Placeholder URL for testing
-  const placeholderAudioUrl = 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3';
-
-  // Set placeholder source on initial load if no src is set
-  useEffect(() => {
-    if (!src) {
-      useAudioStore.getState().setSrc(placeholderAudioUrl);
-    }
-  }, [src]); // Dependency on src
+  // Placeholder logic removed - src should be set via setCurrentTrack
 
   return (
     <div>
-      <audio ref={audioRef} src={src || undefined} preload="auto" />
+      {/* Ensure src is correctly passed from the store */}
+      <audio ref={audioRef} src={src || undefined} preload="metadata" /> {/* Changed preload to metadata */}
 
     </div>
   );
