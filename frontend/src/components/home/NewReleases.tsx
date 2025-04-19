@@ -46,6 +46,7 @@ export default function NewReleases() {
                 title={book.title}
                 author={book.author}
                 rating={0}
+                bookId={book.id} // Add bookId prop
               />
             );
           })}

@@ -1,12 +1,13 @@
 import React from "react";
 import PlayButton from "./PlayButton";
+import { useRouter } from 'next/navigation'; // Import useRouter
 
 interface NewReleaseCardProps {
   image: string;
   title: string;
   author: string;
   rating: number | string;
-  onPlay?: () => void;
+  bookId: string; // Add bookId prop
 }
 
 export default function NewReleaseCard({
@@ -14,8 +15,15 @@ export default function NewReleaseCard({
   title,
   author,
   rating,
-  onPlay,
+  bookId, // Add bookId to destructured props
 }: NewReleaseCardProps) {
+  const router = useRouter(); // Get router instance
+
+  const handlePlayClick = () => {
+    // Navigate to the player page with the bookId
+    router.push(`/player?bookId=${bookId}`);
+  };
+
   console.log(title)
   return (
     <div className="flex gap-4 items-center">
@@ -32,7 +40,7 @@ export default function NewReleaseCard({
           <span className="text-red-600 text-sm">{rating}</span>
         </div>
       </div>
-      <PlayButton bgColor="bg-red-500" iconColor="text-white" onClick={onPlay} />
+      <PlayButton bgColor="bg-red-500" iconColor="text-white" onClick={handlePlayClick} /> {/* Use handlePlayClick */}
     </div>
   );
 }
