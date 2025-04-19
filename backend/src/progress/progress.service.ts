@@ -29,22 +29,22 @@ export class ProgressService {
       // 1. Check Redis first
       const redisData = await this.redisService.getClient().hget(redisKey, bookId);
       if (redisData) {
-        this.logger.debug(`Found progress in Redis for User: ${userId}, Book: ${bookId}`);
+        // this.logger.debug(`Found progress in Redis for User: ${userId}, Book: ${bookId}`); // Removed log
         try {
           const parsedData: ProgressData = JSON.parse(redisData);
           if (typeof parsedData.time === 'number') {
             progressTime = parsedData.time;
-            this.logger.log(`Returning progress from Redis: ${progressTime}s`);
+            // this.logger.log(`Returning progress from Redis: ${progressTime}s`); // Removed log
             return { time: progressTime }; // Return immediately if found in Redis
           } else {
-             this.logger.warn(`Invalid time format in Redis data for User: ${userId}, Book: ${bookId}`);
+             this.logger.warn(`Invalid time format in Redis data for User: ${userId}, Book: ${bookId}`); // Keep warning
           }
         } catch (parseError) {
-          this.logger.error(`Failed to parse Redis data for User: ${userId}, Book: ${bookId}`, parseError);
+          this.logger.error(`Failed to parse Redis data for User: ${userId}, Book: ${bookId}`, parseError); // Keep error
           // Proceed to check DB if Redis data is corrupt
         }
       } else {
-         this.logger.debug(`No progress found in Redis for User: ${userId}, Book: ${bookId}. Checking DB.`);
+         // this.logger.debug(`No progress found in Redis for User: ${userId}, Book: ${bookId}. Checking DB.`); // Removed log
       }
 
       // 2. If not in Redis or Redis data was invalid, check the database
@@ -54,15 +54,15 @@ export class ProgressService {
 
       if (dbProgress) {
         progressTime = dbProgress.time;
-        this.logger.log(`Returning progress from DB: ${progressTime}s`);
+        // this.logger.log(`Returning progress from DB: ${progressTime}s`); // Removed log
       } else {
         // No progress found in DB either
-        this.logger.log(`No progress found in DB for User: ${userId}, Book: ${bookId}. Returning 0.`);
+        // this.logger.log(`No progress found in DB for User: ${userId}, Book: ${bookId}. Returning 0.`); // Removed log
         progressTime = 0;
       }
 
     } catch (error) {
-       this.logger.error(`Error fetching progress for User: ${userId}, Book: ${bookId}`, error);
+       this.logger.error(`Error fetching progress for User: ${userId}, Book: ${bookId}`, error); // Keep error
        // Default to 0 on error, or rethrow if needed
        progressTime = 0;
     }
@@ -74,12 +74,12 @@ export class ProgressService {
   @Cron(CronExpression.EVERY_10_MINUTES) // Or your desired frequency
   async handleCronSync() { // Renamed method to avoid conflict if needed
     if (this.isSyncing) {
-      this.logger.warn('Sync job already running. Skipping this run.');
+      this.logger.warn('Sync job already running. Skipping this run.'); // Keep warning
       return;
     }
 
     this.isSyncing = true;
-    this.logger.log('Starting Redis to DB sync job...');
+    // this.logger.log('Starting Redis to DB sync job...'); // Removed log
 
     const keysToSync: string[] = []; // Keys successfully processed and ready for deletion
     const progressUpdates: AudiobookProgress[] = [];
@@ -88,7 +88,7 @@ export class ProgressService {
     let relevantUpdatesCount = 0;
 
     try {
-      this.logger.log(`Filtering progress updated since ${new Date(thirtyMinutesAgo).toISOString()}`);
+      // this.logger.log(`Filtering progress updated since ${new Date(thirtyMinutesAgo).toISOString()}`); // Removed log
       let cursor = '0';
       do {
         const [nextCursor, keys] = await this.redisService.scan(cursor, 'progress:*', 100); // Scan in batches
@@ -98,7 +98,7 @@ export class ProgressService {
           processedKeysCount++;
           const userId = key.split(':')[1];
           if (!userId) {
-            this.logger.warn(`Skipping invalid Redis key format: ${key}`);
+            this.logger.warn(`Skipping invalid Redis key format: ${key}`); // Keep warning
             continue;
           }
 
@@ -106,7 +106,7 @@ export class ProgressService {
           try {
             bookProgressMap = await this.redisService.hgetall(key);
           } catch (redisGetError) {
-            this.logger.error(`Failed to HGETALL for key ${key}`, redisGetError);
+            this.logger.error(`Failed to HGETALL for key ${key}`, redisGetError); // Keep error
             continue; // Skip this key if Redis read fails
           }
 
@@ -118,16 +118,16 @@ export class ProgressService {
               if (typeof progressData.time !== 'number' || typeof progressData.updatedAt !== 'number') {
                  throw new Error('Invalid progress data structure');
               }
-            } catch (parseError) {
-              this.logger.error(`Failed to parse JSON for key ${key}, field ${bookId}: ${bookProgressMap[bookId]}`, parseError);
-              continue; // Skip this field
-            }
+           } catch (parseError) {
+             this.logger.error(`Failed to parse JSON for key ${key}, field ${bookId}: ${bookProgressMap[bookId]}`, parseError); // Keep error
+             continue; // Skip this field
+           }
 
             // Only process if updated within the last 30 minutes
             if (progressData.updatedAt >= thirtyMinutesAgo) {
                relevantUpdatesCount++;
                keyHasRelevantUpdate = true; // Mark the key for potential deletion later
-               this.logger.debug(`Found relevant update for User: ${userId}, Book: ${bookId}, Time: ${progressData.time}, Updated: ${new Date(progressData.updatedAt).toISOString()}`);
+               // this.logger.debug(`Found relevant update for User: ${userId}, Book: ${bookId}, Time: ${progressData.time}, Updated: ${new Date(progressData.updatedAt).toISOString()}`); // Removed log
                const progressEntity = this.progressRepository.create({
                   userId,
                   bookId,
@@ -144,38 +144,38 @@ export class ProgressService {
         }
       } while (cursor !== '0');
 
-      this.logger.log(`Scan complete. Processed ${processedKeysCount} Redis keys. Found ${relevantUpdatesCount} relevant updates.`);
+      // this.logger.log(`Scan complete. Processed ${processedKeysCount} Redis keys. Found ${relevantUpdatesCount} relevant updates.`); // Removed log
 
       if (progressUpdates.length > 0) {
-        this.logger.log(`Attempting to save ${progressUpdates.length} updates to the database...`);
+        // this.logger.log(`Attempting to save ${progressUpdates.length} updates to the database...`); // Removed log
         try {
           // Use save with chunking for potentially large updates
           await this.progressRepository.save(progressUpdates, { chunk: 100 });
-          this.logger.log(`Successfully saved ${progressUpdates.length} updates to the database.`);
+          // this.logger.log(`Successfully saved ${progressUpdates.length} updates to the database.`); // Removed log
 
           // Delete ONLY the keys that had relevant updates AND were successfully saved
           if (keysToSync.length > 0) {
-             this.logger.log(`Attempting to delete ${keysToSync.length} keys from Redis...`);
+             // this.logger.log(`Attempting to delete ${keysToSync.length} keys from Redis...`); // Removed log
              try {
                  const deletedCount = await this.redisService.del(keysToSync);
-                 this.logger.log(`Successfully deleted ${deletedCount} keys from Redis.`);
+                 // this.logger.log(`Successfully deleted ${deletedCount} keys from Redis.`); // Removed log
              } catch (redisDelError) {
-                 this.logger.error(`Failed to delete keys from Redis after DB sync`, redisDelError);
+                 this.logger.error(`Failed to delete keys from Redis after DB sync`, redisDelError); // Keep error
              }
           }
 
         } catch (dbError) {
-           this.logger.error(`Error saving progress updates to the database. Redis keys were NOT deleted.`, dbError);
+           this.logger.error(`Error saving progress updates to the database. Redis keys were NOT deleted.`, dbError); // Keep error
         }
       } else {
-        this.logger.log('No recent progress updates found in Redis to sync.');
+        // this.logger.log('No recent progress updates found in Redis to sync.'); // Removed log
       }
 
     } catch (scanError) {
-      this.logger.error('Error during Redis to DB sync job:', scanError);
+      this.logger.error('Error during Redis to DB sync job:', scanError); // Keep error
     } finally {
       this.isSyncing = false;
-      this.logger.log('Redis to DB sync job finished.');
+      // this.logger.log('Redis to DB sync job finished.'); // Removed log
     }
   }
   // --- End Merged Sync Logic ---

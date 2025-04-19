@@ -9,7 +9,8 @@ Tracks the current work focus, recent changes, next steps, and active decisions 
 - Aligned and synchronized all backend entities (Book, Audio, Chapter, User, etc.) with new TypeScript interfaces in the frontend for full structural and type consistency.
 - Refactored `frontend/src/lib/api/authClient.ts` to use TanStack Query (react-query) hooks for authentication (login, logout, current user, refresh token), removing local User interface in favor of the model.
 - Created `frontend/src/lib/api/bookClient.ts` with TanStack Query hooks for paginated book listing, single book fetch, create, update, and delete, using nestjs-paginate response structure.
-- Refactoring frontend authentication state management from React Context to Zustand.
+- Implementing audio playback functionality, including fetching stream URL, updating player UI, and managing state with Zustand.
+- Implementing persistence for audio player state (`currentTrack`) using localStorage.
 ## Recent Changes
 
 - Created and integrated unified frontend models for Book, Audio, Chapter, User, Role, and Status to match backend entities.
@@ -41,6 +42,17 @@ Tracks the current work focus, recent changes, next steps, and active decisions 
     - Implemented click handling on `MiniPlayer` to open the full player and stop propagation on controls.
     - Added logic to pause audio when the mini-player close button is clicked.
     - Adjusted mini-player vertical position (`bottom-16`) and z-index (`zIndex: 1000`).
+    - Added robust placeholder image handling for MiniPlayer cover art.
+- [2025-04-19 17:31:00] Implemented core audio playback:
+    - Updated `NewReleaseCard` to construct stream URL (`/api/v1/books/:id/stream`) and set track info in `useAudioStore` on play click.
+    - Updated `PlayerPage` to display dynamic track info from store.
+    - Removed placeholder audio logic from `AudioPlayer`.
+- [2025-04-19 17:31:00] Implemented persistence for `currentTrack` in `useAudioStore` using Zustand `persist` middleware and `localStorage`.
+- [2025-04-19 17:31:00] Added rehydration logic in `ClientLayout` to restore audio state from `localStorage` on load.
+- [2025-04-19 17:52:21] Refactored audio track setting:
+    - Modified `useAudioStore` (`setCurrentTrack`) to accept a `Book` object instead of `TrackInfo`.
+    - Moved stream URL construction (`/api/v1/books/:id/stream`) logic into `useAudioStore`.
+    - Updated `NewReleaseCard` to pass the `Book` object directly to `setCurrentTrack`.
 ## Next Steps
 
 - Refactor all frontend API and state logic to use the new unified models for all book, audio, chapter, and user operations.
@@ -62,3 +74,4 @@ Tracks the current work focus, recent changes, next steps, and active decisions 
 - Zustand (`useAuthStore`) provides a centralized and potentially more performant way to manage and access user authentication status compared to the previous Context implementation.
 - `AuthGuard` simplifies route protection logic by wrapping protected content.
 - Componentization of UI elements (cards, buttons) significantly reduced duplication and improved maintainability.
+[2025-04-19 13:49:47] - Updated backend CORS configuration in `main.ts` to allow requests from the frontend development server origin (`http://localhost:3000`).

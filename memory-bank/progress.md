@@ -18,3 +18,13 @@
 [2025-04-19 12:34:08] - Updated player page (`frontend/src/app/player/page.tsx`) to connect existing UI controls (play/pause button, progress bar) to the Zustand store.
 [2025-04-19 12:34:08] - Removed duplicate basic controls from `AudioPlayer.tsx`.
 [2025-04-19 13:14:30] - Completed implementation of the mini-player component, including state management for visibility, basic controls, and integration into the main layout.
+[2025-04-19 13:49:47] - Updated backend CORS configuration in `backend/src/main.ts` to allow origin `http://localhost:3000` for frontend development.
+[2025-04-19 17:29:00] - Implemented core audio playback functionality:
+  - Updated `NewReleaseCard` to fetch stream URL (`/api/v1/books/:id/stream`) on play click.
+  - Updated `useAudioStore` to store `currentTrack` (including stream URL).
+  - Updated `PlayerPage` to display track info from `useAudioStore`.
+  - Removed placeholder audio logic from `AudioPlayer`.
+  - Corrected image URL handling in `MiniPlayer`.
+[2025-04-19 17:29:00] - Implemented persistence for `currentTrack` in `useAudioStore` using Zustand `persist` middleware and `localStorage`.
+[2025-04-19 17:29:00] - Added rehydration logic in `ClientLayout` to restore audio source and mini-player visibility from persisted state on page load.
+[2025-04-19 18:49:26] - Created frontend API client `frontend/src/lib/api/progressClient.ts` with `useFetchProgress` hook using TanStack Query to fetch user-specific book progress from `GET /api/v1/progress/:userId/:bookId`.

@@ -41,6 +41,7 @@ const PlayerPage = () => {
   const handleClosePlayer = () => {
     setIsFullPlayerVisible(false); // Hide full player
     setIsMiniPlayerActive(true); // Activate mini-player
+    useAudioStore.getState().pause(); // Explicitly pause audio to trigger final progress save
     router.back(); // Navigate back to the previous page
   };
 
@@ -77,7 +78,7 @@ const PlayerPage = () => {
       {/* Book Info */}
       <div id="book-info" className="px-6 text-center">
         <h1 className="text-2xl font-bold mb-2">{currentTrack?.title || "Loading..."}</h1>
-        <p className="text-red-600">{currentTrack?.artist || "Unknown Artist"}</p>
+        <p className="text-red-600">{currentTrack?.author || "Unknown Author"}</p> {/* Changed artist to author */}
         {/* Rating might need separate data source or be part of TrackInfo */}
         {/* <div className="flex items-center justify-center gap-2 mt-2">
           <i className="fa-solid fa-star text-yellow-400"></i>

@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { ClientAuthWrapper } from "@/components/auth/ClientAuthWrapper";
 import MiniPlayer from "@/components/MiniPlayer"; // Import MiniPlayer
 import useAudioStore from "@/lib/store/audioStore"; // Import useAudioStore
+import { useWebSocket } from "@/lib/hooks/useWebSocket"; // Import the hook
 
 interface ClientLayoutProps {
   children: ReactNode;
@@ -17,6 +18,12 @@ export default function ClientLayout({ children }: ClientLayoutProps) {
     queryClientRef.current = new QueryClient();
   }
 
+  // Initialize WebSocket connection
+  const wsUrl = process.env.NEXT_PUBLIC_WS_URL;
+  // Note: The hook itself handles connection logic and cleanup.
+  // We don't need to use the returned socket/emitEvent directly in this layout component.
+  useWebSocket(wsUrl);
+
   const { isMiniPlayerActive, currentTrack, setSrc, setIsMiniPlayerActive } = useAudioStore(); // Get state and actions
 
   // Handle rehydration from localStorage
@@ -26,7 +33,9 @@ export default function ClientLayout({ children }: ClientLayoutProps) {
     // if it existed in localStorage.
     if (currentTrack && !useAudioStore.getState().src) { // Check if src is not already set to avoid redundant calls
       console.log("Rehydrating audio state:", currentTrack);
-      setSrc(currentTrack.audioUrl);
+      // Construct the stream URL dynamically, same as in audioStore
+      const streamUrl = `http://localhost:3000/api/v1/books/${currentTrack.id}/stream`;
+      setSrc(streamUrl);
       setIsMiniPlayerActive(true); // Ensure mini-player is active if track was restored
     }
     // We only want this effect to run once after initial mount/hydration

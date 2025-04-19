@@ -25,12 +25,12 @@ export class ProgressGateway implements OnGatewayConnection, OnGatewayDisconnect
   constructor(private readonly redisService: RedisService) {}
 
   handleConnection(client: Socket, ...args: any[]) {
-    console.log(`Client connected: ${client.id}`);
+    // console.log(`Client connected: ${client.id}`); // Removed log
     // Potentially handle user authentication/association here
   }
 
   handleDisconnect(client: Socket) {
-    console.log(`Client disconnected: ${client.id}`);
+    // console.log(`Client disconnected: ${client.id}`); // Removed log
     // Handle cleanup if necessary
   }
 
@@ -46,7 +46,7 @@ export class ProgressGateway implements OnGatewayConnection, OnGatewayDisconnect
 
     try {
       await this.redisService.hset(redisKey, bookId, redisValue);
-      console.log(`Progress updated in Redis for user ${userId}, book ${bookId}: ${time}s`);
+      // console.log(`Progress updated in Redis for user ${userId}, book ${bookId}: ${time}s`); // Removed log
       // Optional: Send acknowledgement back to the client
       // client.emit('progressAcknowledged', { bookId, time });
     } catch (error) {
@@ -56,17 +56,5 @@ export class ProgressGateway implements OnGatewayConnection, OnGatewayDisconnect
     }
   }
 
-  // Handler for immediate saving requests (e.g., on page unload)
-  @UsePipes(new ValidationPipe())
-  @SubscribeMessage('saveFinalProgress')
-  async handleSaveFinalProgress(
-    @MessageBody() data: UpdateProgressDto,
-    @ConnectedSocket() client: Socket,
-  ): Promise<void> {
-    console.log(`Received final progress save request for user ${data.userId}, book ${data.bookId}`);
-    // For now, just update Redis immediately like a regular update.
-    // Later, this could trigger an immediate DB save.
-    await this.handleUpdateProgress(data, client);
-    // Potentially add logic here later to bypass Redis and save directly to DB
-  }
+  // Removed unused handleSaveFinalProgress handler as frontend sends final progress via 'updateProgress' on pause
 }
