@@ -26,7 +26,7 @@ export function ClientAuthWrapper({ children }: ClientAuthWrapperProps) {
 
   // Define paths where Header and BottomNav should be hidden
   const hideLayoutPaths = ['/login'];
-  const hideLayoutPatterns = [/^\/player\/.+/]; // Regex for /player/:id
+  const hideLayoutPatterns = [/^\/player(\/.+)?$/]; // Regex for /player or /player/:id
 
   // Determine if the layout should be shown
   const showLayout = !hideLayoutPaths.includes(pathname) &&
