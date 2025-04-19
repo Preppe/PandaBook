@@ -1,13 +1,17 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
+import type { Book } from '@/lib/models/Book'; // Import the Book type
 
+// TrackInfo can be simplified or removed if currentTrack directly holds the Book object
+// For now, let's keep it but it won't be directly used for currentTrack state type
 export interface TrackInfo {
-  id: string; // Assuming a unique ID for the track
+  id: string;
   title: string;
-  artist: string;
-  coverImageUrl?: string; // Optional cover image URL
-  audioUrl: string; // URL for the audio file
+  artist: string; // Corresponds to Book.author
+  coverImageUrl?: string; // Corresponds to Book.cover
+  // audioUrl is removed, will be generated dynamically
 }
+
 
 interface AudioState {
   isPlaying: boolean;
@@ -16,7 +20,7 @@ interface AudioState {
   duration: number;
   src: string | null;
   audioElement: HTMLAudioElement | null;
-  currentTrack: TrackInfo | null;
+  currentTrack: Book | null; // Changed to hold the full Book object
   isFullPlayerVisible: boolean; // Added state for full player visibility
   isMiniPlayerActive: boolean; // Added state for mini-player activity
 }
@@ -31,7 +35,7 @@ interface AudioActions {
   setSrc: (src: string | null) => void;
   updateCurrentTime: (time: number) => void;
   updateDuration: (duration: number) => void;
-  setCurrentTrack: (track: TrackInfo | null) => void;
+  setCurrentTrack: (book: Book | null) => void; // Changed to accept Book object
   setIsFullPlayerVisible: (visible: boolean) => void; // Added action to control full player visibility
   setIsMiniPlayerActive: (active: boolean) => void; // Added action to control mini-player activity
 }
@@ -108,12 +112,16 @@ const useAudioStore = create<AudioState & AudioActions>()(
   updateCurrentTime: (time) => set({ currentTime: time }),
   updateDuration: (duration) => set({ duration: duration }),
 
-  setCurrentTrack: (track) => {
-    set({ currentTrack: track, isMiniPlayerActive: track !== null }); // Activate mini-player when a track is set
-    if (track) {
-      get().setSrc(track.audioUrl);
+  setCurrentTrack: (book) => {
+    set({ currentTrack: book, isMiniPlayerActive: book !== null }); // Activate mini-player when a book is set
+    if (book) {
+      // Construct the stream URL dynamically
+      const streamUrl = `http://localhost:3000/api/v1/books/${book.id}/stream`;
+      get().setSrc(streamUrl);
     } else {
       get().setSrc(null);
+      // Optionally pause when track is cleared
+      // get().pause();
     }
   },
 

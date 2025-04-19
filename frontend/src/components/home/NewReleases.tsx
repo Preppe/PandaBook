@@ -42,11 +42,7 @@ export default function NewReleases() {
             return (
               <NewReleaseCard
                 key={book.id}
-                image={book.cover || "/file.svg"}
-                title={book.title}
-                author={book.author}
-                rating={0}
-                bookId={book.id} // Add bookId prop
+                book={book} // Pass the entire book object
               />
             );
           })}
