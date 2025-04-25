@@ -64,14 +64,14 @@ const PlayerPage = () => {
       <div id="book-cover" className="px-6 py-8">
         <div className="relative w-64 h-64 mx-auto">
           {/* Use currentTrack cover image or a default */}
-          {/* <Image
-            src={currentTrack?.coverImageUrl || "/placeholder.jpg"} // Use actual cover or placeholder
+          <Image
+            src={currentTrack?.cover || "/placeholder.jpg"} // Use actual cover or placeholder
             alt={currentTrack?.title || "Book Cover"} // Use actual title or default alt
             width={256} // specify width
             height={256} // specify height
             className="rounded-3xl shadow-2xl object-cover"
             priority // Prioritize loading the cover image
-          /> */}
+          />
         </div>
       </div>
 
