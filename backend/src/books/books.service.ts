@@ -43,7 +43,7 @@ export class BooksService {
 
     // Handle cover file upload if it exists
     if (cover) {
-      const coverS3Key = `books/covers/${Date.now()}-${cover.originalname}`;
+      const coverS3Key = `${Date.now()}-${cover.originalname}`;
       await this.s3Service.uploadFile(
         {
           ...cover,

@@ -43,6 +43,7 @@ export type S3Config = {
   awsS3Region?: string;
   maxFileSize: number;
   awsS3Endpoint?: string;
+  cdnBaseUrl?: string;
 };
 
 export type GoogleConfig = {

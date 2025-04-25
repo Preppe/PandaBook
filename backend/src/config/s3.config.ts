@@ -23,6 +23,10 @@ class EnvironmentVariablesValidator {
   @IsString()
   @IsOptional()
   AWS_S3_ENDPOINT?: string;
+
+  @IsString()
+  @IsOptional()
+  CDN_BASE_URL?: string;
 }
 
 export default registerAs<S3Config>('s3', () => {
@@ -37,5 +41,6 @@ export default registerAs<S3Config>('s3', () => {
     awsS3Region: process.env.AWS_S3_REGION,
     maxFileSize: 5242880, // 5mb
     awsS3Endpoint: process.env.AWS_S3_ENDPOINT,
+    cdnBaseUrl: process.env.CDN_BASE_URL,
   };
 });

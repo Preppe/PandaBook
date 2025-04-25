@@ -1,5 +1,5 @@
 import { EntityHelper } from 'src/utils/entity-helper';
-import { Column, CreateDateColumn, Entity, Generated, JoinColumn, OneToMany, OneToOne, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm'; // Added OneToMany
+import { AfterLoad, Column, CreateDateColumn, Entity, Generated, JoinColumn, OneToMany, OneToOne, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm'; // Added OneToMany, AfterLoad
 import { Audio } from './audio.entity';
 import { Chapter } from './chapter.entity'; // Adjusted import path
 
@@ -41,4 +41,15 @@ export class Book extends EntityHelper {
     eager: false, // Optional: don't load chapters by default
   })
   chapters: Chapter[];
+
+  @AfterLoad()
+  afterLoad() {
+    if (this.cover && !this.cover.startsWith('http')) {
+      // Access process.env directly as ConfigService injection is not feasible in entity hooks
+      const cdnBaseUrl = process.env.CDN_BASE_URL;
+      if (cdnBaseUrl) {
+        this.cover = `${cdnBaseUrl}/covers/${this.cover}`;
+      }
+    }
+  }
 }
