@@ -18,7 +18,6 @@ export default function RootLayout({
       <body className={cn('min-h-screen bg-gray-50 font-sans antialiased')}>
         <ClientLayout>
           {children}
-          {/* Add the AudioPlayer component here */}
           <AudioPlayer />
         </ClientLayout>
       </body>

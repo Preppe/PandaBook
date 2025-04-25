@@ -79,7 +79,6 @@ const MiniPlayer = () => {
             )}
           ></i>
         </button>
-        {/* Close Button - Placeholder for now */}
         <button className="text-red-800" onClick={handleCloseMiniPlayer}>
            <i className="fa-solid fa-xmark text-xl"></i> {/* Changed icon to 'x' */}
         </button>

@@ -19,7 +19,6 @@ const PlayerPage = () => {
   } = useAudioStore();
   const router = useRouter(); // Get router instance
 
-  // Set full player visible when this page is mounted
   // Set full player visible and mini-player inactive when this page is mounted
   useEffect(() => {
     setIsFullPlayerVisible(true);

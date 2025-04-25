@@ -2,14 +2,11 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import type { Book } from "@/lib/models/Book"; // Import the Book type
 
-// TrackInfo can be simplified or removed if currentTrack directly holds the Book object
-// For now, let's keep it but it won't be directly used for currentTrack state type
 export interface TrackInfo {
   id: string;
   title: string;
-  artist: string; // Corresponds to Book.author
-  coverImageUrl?: string; // Corresponds to Book.cover
-  // audioUrl is removed, will be generated dynamically
+  artist: string;
+  coverImageUrl?: string;
 }
 
 interface AudioState {
@@ -122,8 +119,6 @@ const useAudioStore = create<AudioState & AudioActions>()(
           get().setSrc(streamUrl);
         } else {
           get().setSrc(null);
-          // Optionally pause when track is cleared
-          // get().pause();
         }
       },
 
@@ -149,14 +144,6 @@ const useAudioStore = create<AudioState & AudioActions>()(
       name: "audio-storage", // Unique name for localStorage key
       storage: createJSONStorage(() => localStorage), // Use localStorage
       partialize: (state) => ({ currentTrack: state.currentTrack }), // Only persist currentTrack
-      // Optional: Add logic here to re-set the src when the store is rehydrated
-      // onRehydrateStorage: () => (state) => {
-      //   if (state?.currentTrack) {
-      //     state.setSrc(state.currentTrack.audioUrl);
-      //     // Potentially set isMiniPlayerActive based on persisted track
-      //     state.setIsMiniPlayerActive(true);
-      //   }
-      // }
     }
   )
 );

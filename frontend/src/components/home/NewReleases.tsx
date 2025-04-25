@@ -3,7 +3,6 @@ import NewReleaseCard from "@/components/ui/NewReleaseCard";
 import { useBooks } from "@/lib/api/bookClient";
 
 export default function NewReleases() {
-  // Fetch first 5 new releases, sorted by createdAt descending if supported
   const { data, isLoading, isError, error, refetch } = useBooks({
     limit: 5,
     page: 1,
