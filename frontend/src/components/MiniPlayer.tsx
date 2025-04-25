@@ -48,9 +48,9 @@ const MiniPlayer = () => {
           {/* Validate coverImageUrl before using, otherwise use placeholder */}
           <Image
             src={
-              currentTrack?.coverImageUrl &&
-              (currentTrack.coverImageUrl.startsWith('http') || currentTrack.coverImageUrl.startsWith('/'))
-                ? currentTrack.coverImageUrl
+              currentTrack?.cover &&
+              (currentTrack.cover.startsWith('http') || currentTrack.cover.startsWith('/'))
+                ? currentTrack.cover
                 : "/placeholder.jpg" // Default placeholder
             }
             alt={currentTrack?.title || "Book Cover"} // Use actual title or default alt
@@ -64,7 +64,7 @@ const MiniPlayer = () => {
             {currentTrack?.title || "Unknown Title"} {/* Use optional chaining */}
           </span>
           <span className="text-xs text-red-600 truncate">
-            {currentTrack?.artist || "Unknown Artist"} {/* Use optional chaining */}
+            {currentTrack?.author || "Unknown Artist"} {/* Use optional chaining */}
           </span>
         </div>
       </div>
