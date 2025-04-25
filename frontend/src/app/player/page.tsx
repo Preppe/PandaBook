@@ -15,6 +15,7 @@ const PlayerPage = () => {
     setIsFullPlayerVisible, // Get action to control full player visibility
     setIsMiniPlayerActive, // Get action to control mini-player activity
     currentTrack, // Get current track info
+    skip, // Get the new skip action
   } = useAudioStore();
   const router = useRouter(); // Get router instance
 
@@ -50,7 +51,7 @@ const PlayerPage = () => {
       {/* Header */}
       <div id="player-header" className="px-6 pt-12 pb-4">
         <div className="flex justify-between items-center">
-          <button className="text-red-800" onClick={handleClosePlayer}> {/* Add onClick handler */}
+          <button className="text-red-800" onClick={handleClosePlayer}>
             <i className="fa-solid fa-chevron-down text-xl"></i>
           </button>
           <span className="font-medium">In riproduzione</span>
@@ -77,13 +78,12 @@ const PlayerPage = () => {
 
       {/* Book Info */}
       <div id="book-info" className="px-6 text-center">
-        <h1 className="text-2xl font-bold mb-2">{currentTrack?.title || "Loading..."}</h1>
-        <p className="text-red-600">{currentTrack?.author || "Unknown Author"}</p> {/* Changed artist to author */}
-        {/* Rating might need separate data source or be part of TrackInfo */}
-        {/* <div className="flex items-center justify-center gap-2 mt-2">
-          <i className="fa-solid fa-star text-yellow-400"></i>
-          <span className="text-red-600">4.8</span>
-        </div> */}
+        <h1 className="text-2xl font-bold mb-2">
+          {currentTrack?.title || "Loading..."}
+        </h1>
+        <p className="text-red-600">
+          {currentTrack?.author || "Unknown Author"}
+        </p>
       </div>
 
       {/* Progress Bar */}
@@ -108,21 +108,16 @@ const PlayerPage = () => {
 
       {/* Player Controls */}
       <div id="player-controls" className="px-6">
-        {/* Secondary Controls */}
-        <div className="flex justify-between items-center mb-8">
-          <button className="text-red-600">
-            <i className="fa-solid fa-shuffle text-xl"></i>
-          </button>
-          <button className="text-red-600">
-            <i className="fa-solid fa-repeat text-xl"></i>
-          </button>
-        </div>
-
         {/* Primary Controls */}
         <div className="flex justify-center items-center gap-8">
-          <button className="text-red-800">
-            <i className="fa-solid fa-backward-step text-3xl"></i>
+          <button
+            className="text-red-800 flex flex-col items-center"
+            onClick={() => skip(15, "backward")}
+          >
+            <i className="fa-solid fa-rotate-left text-3xl"></i>{" "}
+            <span className="text-xs mt-1">15s</span>
           </button>
+          {/* Play/Pause button */}
           <button
             className="bg-red-500 w-20 h-20 rounded-full flex items-center justify-center shadow-lg"
             onClick={togglePlayPause}
@@ -133,18 +128,12 @@ const PlayerPage = () => {
               } text-white text-3xl`}
             ></i>
           </button>
-          <button className="text-red-800">
-            <i className="fa-solid fa-forward-step text-3xl"></i>
-          </button>
-        </div>
-
-        {/* Additional Controls */}
-        <div className="flex justify-between items-center mt-8">
-          <button className="text-red-600">
-            <i className="fa-solid fa-volume-high text-xl"></i>
-          </button>
-          <button className="text-red-600">
-            <i className="fa-solid fa-clock text-xl"></i>
+          <button
+            className="text-red-800 flex flex-col items-center"
+            onClick={() => skip(15, "forward")}
+          >
+            <i className="fa-solid fa-rotate-right text-3xl"></i>{" "}
+            <span className="text-xs mt-1">15s</span>
           </button>
         </div>
       </div>

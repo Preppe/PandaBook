@@ -9,10 +9,6 @@ export default function BottomNav() {
           <span className="text-xs text-red-800">Home</span>
         </button>
         <button className="flex flex-col items-center gap-1">
-          <i className="fa-solid fa-compass text-red-400 text-xl"></i>
-          <span className="text-xs text-red-600">Scopri</span>
-        </button>
-        <button className="flex flex-col items-center gap-1">
           <i className="fa-solid fa-bookmark text-red-400 text-xl"></i>
           <span className="text-xs text-red-600">Libreria</span>
         </button>
