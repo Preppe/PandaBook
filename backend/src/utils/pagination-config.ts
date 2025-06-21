@@ -1,6 +1,7 @@
 import { FilterOperator, PaginateConfig } from 'nestjs-paginate';
 import { Book } from 'src/books/entities/book.entity';
 import { User } from 'src/users/entities/user.entity';
+import { AudiobookProgress } from '../progress/entities/audiobook-progress.entity'; // Import AudiobookProgress
 
 export const paginateConfigBook: PaginateConfig<Book> = {
   sortableColumns: ['id', 'title', 'author', 'createdAt', 'updatedAt'],
@@ -42,4 +43,12 @@ export const paginateConfigUser: PaginateConfig<User> = {
   },
   // Enable relations for filtering/sorting
   relations: ['role', 'status'],
+};
+
+// Pagination config for AudiobookProgress entity
+export const progressPaginationConfig: PaginateConfig<AudiobookProgress> = {
+  sortableColumns: ['updatedAt', 'time'], // Allow sorting by updatedAt and time
+  defaultSortBy: [['updatedAt', 'DESC']], // Default sort by most recent update
+  searchableColumns: ['bookId'], // Allow searching by bookId if needed
+  // You can add relations here if you need to include book details, e.g., relations: ['book']
 };

@@ -2,28 +2,7 @@ import { useQuery, UseQueryOptions } from '@tanstack/react-query';
 import type { Book } from '../models/Book';
 import type { Audio } from '../models/Audio';
 import apiClient from './apiClient';
-
-// --- Paginate Types (nestjs-paginate) ---
-export interface PaginateMeta {
-  itemCount: number;
-  totalItems: number;
-  itemsPerPage: number;
-  totalPages: number;
-  currentPage: number;
-}
-
-export interface PaginateLinks {
-  first: string;
-  previous?: string;
-  next?: string;
-  last: string;
-}
-
-export interface Paginate<Book> {
-  data: Book[];
-  meta: PaginateMeta;
-  links: PaginateLinks;
-}
+import type { Paginated } from '../types/pagination'; // Import shared Paginated type
 
 // --- API Client Helper ---
 
@@ -32,14 +11,14 @@ export interface Paginate<Book> {
 // 1. Paginated Books List
 export function useBooks(
   params: Record<string, any> = {},
-  options?: UseQueryOptions<Paginate<Book>, Error>
+  options?: UseQueryOptions<Paginated<Book>, Error> // Use Paginated<Book>
 ) {
   // Build query string for pagination/filtering
   const queryString = new URLSearchParams(params).toString();
   const endpoint = '/books';
   const url = queryString ? `${endpoint}?${queryString}` : endpoint;
 
-  return useQuery<Paginate<Book>, Error>({
+  return useQuery<Paginated<Book>, Error>({ // Use Paginated<Book>
     queryKey: ['books', params],
     queryFn: () => apiClient(url),
     ...options,

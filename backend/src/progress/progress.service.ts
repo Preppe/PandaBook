@@ -4,6 +4,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { RedisService } from 'src/redis/redis.service';
 import { AudiobookProgress } from './entities/audiobook-progress.entity';
+import { paginate, Paginated, PaginateQuery } from 'nestjs-paginate';
+import { progressPaginationConfig } from 'src/utils/pagination-config';
 
 interface ProgressData {
   time: number;
@@ -68,6 +70,13 @@ export class ProgressService {
     }
 
     return { time: progressTime };
+  }
+
+  async findAllPaginated(userId: string, query: PaginateQuery): Promise<Paginated<AudiobookProgress>> {
+    const queryBuilder = this.progressRepository.createQueryBuilder('progress')
+    queryBuilder.where('progress.userId = :userId', { userId });
+    
+    return paginate(query, queryBuilder, progressPaginationConfig);
   }
 
   // --- Merged Sync Logic ---

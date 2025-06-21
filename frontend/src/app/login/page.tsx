@@ -25,7 +25,7 @@ export default function LoginPage() {
     }
   }, [isAuthenticated, isLoading, router]);
 
-  const { mutateAsync: loginMutate, isLoading: isLoginLoading } = useLoginUser({
+  const { mutateAsync: loginMutate, isPending: isLoginLoading } = useLoginUser({
     onSuccess: (user) => {
       setUser(user);
       setLoading(false);

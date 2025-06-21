@@ -9,7 +9,7 @@ export interface TrackInfo {
   coverImageUrl?: string;
 }
 
-interface AudioState {
+export interface AudioState { // Add export
   isPlaying: boolean;
   volume: number;
   currentTime: number;
@@ -21,7 +21,7 @@ interface AudioState {
   isMiniPlayerActive: boolean; // Added state for mini-player activity
 }
 
-interface AudioActions {
+export interface AudioActions { // Add export
   setAudioElement: (element: HTMLAudioElement) => void;
   play: () => void;
   pause: () => void;
