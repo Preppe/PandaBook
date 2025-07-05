@@ -142,6 +142,8 @@ export class BooksService {
         'Accept-Ranges': 'bytes',
         'Cache-Control': 'public, max-age=604800', // 1 week cache
         'Content-Disposition': `inline; filename="${book.title}.${audio.format}"`,
+        'Access-Control-Allow-Origin': '*',
+        'Cross-Origin-Resource-Policy': 'cross-origin',
       };
 
       // Handle range requests
