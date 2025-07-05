@@ -42,18 +42,6 @@ export default function ClientLayout({ children }: ClientLayoutProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentTrack]); // Depend on currentTrack to run after hydration potentially updates it
 
-  // Register service worker for PWA
-  useEffect(() => {
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js')
-        .then((registration) => {
-          console.log('Service Worker registered successfully:', registration);
-        })
-        .catch((error) => {
-          console.log('Service Worker registration failed:', error);
-        });
-    }
-  }, []);
 
   return (
     <QueryClientProvider client={queryClientRef.current}>

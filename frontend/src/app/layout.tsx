@@ -17,11 +17,6 @@ export default function RootLayout({
     <html lang="en">
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <meta name="theme-color" content="#000000" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="Audiobook App" />
-        <link rel="apple-touch-icon" href="/icon-192x192.png" />
       </head>
       <body className={cn('min-h-screen bg-gray-50 font-sans antialiased')}>
         <ClientLayout>

@@ -4,50 +4,9 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
       {
-        hostname: 'localhost'
-      }
-    ]
-  },
-  async headers() {
-    return [
-      {
-        // Apply these headers to all routes in your application.
-        source: '/(.*)',
-        headers: [
-          {
-            key: 'X-Content-Type-Options',
-            value: 'nosniff',
-          },
-          {
-            key: 'X-Frame-Options',
-            value: 'DENY',
-          },
-          {
-            key: 'Referrer-Policy',
-            value: 'strict-origin-when-cross-origin',
-          },
-        ],
+        hostname: "localhost",
       },
-      {
-        // Apply these headers specifically to the service worker file.
-        source: '/sw.js',
-        headers: [
-          {
-            key: 'Content-Type',
-            value: 'application/javascript; charset=utf-8',
-          },
-          {
-            key: 'Cache-Control',
-            value: 'no-cache, no-store, must-revalidate', // Ensure the SW is not cached
-          },
-          {
-            key: 'Content-Security-Policy',
-            // Allow service worker to connect to backend API
-            value: "default-src 'self'; script-src 'self'; connect-src 'self' http://localhost:3000 ws://localhost:3001; worker-src 'self'",
-          },
-        ],
-      },
-    ]
+    ],
   },
 };
 
