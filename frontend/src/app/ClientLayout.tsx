@@ -34,7 +34,8 @@ export default function ClientLayout({ children }: ClientLayoutProps) {
     if (currentTrack && !useAudioStore.getState().src) { // Check if src is not already set to avoid redundant calls
       console.log("Rehydrating audio state:", currentTrack);
       // Construct the stream URL dynamically, same as in audioStore
-      const streamUrl = `http://localhost:3000/api/v1/books/${currentTrack.id}/stream`;
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+      const streamUrl = `${apiUrl}/books/${currentTrack.id}/stream`;
       setSrc(streamUrl);
       setIsMiniPlayerActive(true); // Ensure mini-player is active if track was restored
     }

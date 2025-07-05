@@ -115,7 +115,8 @@ const useAudioStore = create<AudioState & AudioActions>()(
         set({ currentTrack: book, isMiniPlayerActive: book !== null }); // Activate mini-player when a book is set
         if (book) {
           // Construct the stream URL dynamically
-          const streamUrl = `http://localhost:3000/api/v1/books/${book.id}/stream`;
+          const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+          const streamUrl = `${apiUrl}/books/${book.id}/stream`;
           get().setSrc(streamUrl);
         } else {
           get().setSrc(null);

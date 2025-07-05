@@ -15,7 +15,7 @@ export interface ApiClientOptions extends RequestInit {
   headers?: HeadersInit; // Accepts Headers, object, or array
 }
 
-const DEFAULT_API_BASE_URL = 'http://localhost:3000/api/v1'
+const DEFAULT_API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1'
 
 async function apiClient(
   endpoint: string,
