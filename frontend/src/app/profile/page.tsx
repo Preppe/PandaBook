@@ -42,7 +42,7 @@ function ProfileContent() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-orange-50 to-orange-100 pb-20">
+    <div>
       {/* Header Profile */}
       <div className="mx-6 pt-6 pb-4">
         <div className="bg-gradient-to-r from-red-500 to-red-600 rounded-2xl p-6 shadow-lg">

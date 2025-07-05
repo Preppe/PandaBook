@@ -43,8 +43,11 @@ export default function ClientLayout({ children }: ClientLayoutProps) {
   }, [currentTrack]); // Depend on currentTrack to run after hydration potentially updates it
 
 
+  // Calcola padding-bottom dinamico
+  const paddingBottom = isMiniPlayerActive ? "pb-40" : "pb-20";
+
   return (
-    <div className={cn('min-h-screen bg-gray-50 font-sans antialiased')}>
+    <div className={cn('min-h-screen bg-gradient-to-b from-orange-50 to-orange-100 font-sans antialiased', paddingBottom)}>
       <QueryClientProvider client={queryClientRef.current}>
         <ClientAuthWrapper>
           {children}
