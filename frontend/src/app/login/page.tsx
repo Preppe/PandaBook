@@ -1,27 +1,22 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect, FormEvent } from 'react';
-import { useRouter } from 'next/navigation';
-// import { useAuth } from '../../context/AuthContext'; // Remove old context import
-import useAuthStore from '@/lib/store/authStore'; // Import Zustand store
-import { useLoginUser } from '@/lib/api/authClient';
+import React, { useState, useEffect, FormEvent } from "react";
+import { useRouter } from "next/navigation";
+import useAuthStore from "@/lib/store/authStore";
+import { useLoginUser } from "@/lib/api/authClient";
+import GoogleSignInButton from "@/components/GoogleSignInButton";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
-  // Get state and actions from Zustand store
   const { setUser, setLoading, isLoading, isAuthenticated } = useAuthStore();
-  // Note: 'user' object is not directly needed for the login page logic here
   const router = useRouter();
 
-  // Redirect if already logged in
   useEffect(() => {
-    // Redirect only if authentication status is confirmed (not loading) and user is authenticated
     if (!isLoading && isAuthenticated) {
-      console.log('User already authenticated, redirecting from login...');
-      // Redirect to a protected route, e.g., home or dashboard
-      router.push('/'); // Or '/dashboard' or wherever appropriate
+      console.log("User already authenticated, redirecting from login...");
+      router.push("/");
     }
   }, [isAuthenticated, isLoading, router]);
 
@@ -31,9 +26,9 @@ export default function LoginPage() {
       setLoading(false);
     },
     onError: (err: any) => {
-      setError(err.message || 'Login failed. Please check your credentials.');
+      setError(err.message || "Login failed. Please check your credentials.");
       setLoading(false);
-    }
+    },
   });
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
@@ -41,7 +36,7 @@ export default function LoginPage() {
     setError(null); // Clear previous errors
 
     if (!email || !password) {
-      setError('Email and password are required.');
+      setError("Email and password are required.");
       return;
     }
 
@@ -58,8 +53,12 @@ export default function LoginPage() {
   // Don't render the login form if the user is authenticated and redirection is pending
   // or if initial loading is still happening (to avoid flash of content)
   if (isLoading || isAuthenticated) {
-      // You can show a loading indicator or null while redirecting/loading
-      return <div className="min-h-screen flex items-center justify-center"><p>Loading...</p></div>;
+    // You can show a loading indicator or null while redirecting/loading
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p>Loading...</p>
+      </div>
+    );
   }
 
   return (
@@ -95,9 +94,16 @@ export default function LoginPage() {
           </p>
         </div>
 
-        <form id="login-form" className="w-full space-y-4 mt-6" onSubmit={handleSubmit}>
+        <form
+          id="login-form"
+          className="w-full space-y-4 mt-6"
+          onSubmit={handleSubmit}
+        >
           {error && (
-            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+            <div
+              className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative"
+              role="alert"
+            >
               <span className="block sm:inline">{error}</span>
             </div>
           )}
@@ -155,11 +161,10 @@ export default function LoginPage() {
             className="w-full bg-red-500 hover:bg-red-600 text-white font-medium py-3 rounded-xl mt-6 shadow-lg shadow-red-500/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             disabled={isLoading}
           >
-            {isLoading ? 'Accesso in corso...' : 'Accedi'}
+            {isLoading ? "Accesso in corso..." : "Accedi"}
           </button>
         </form>
 
-        {/* Social login and signup links remain for now, functionality not implemented */}
         <div id="social-login" className="w-full space-y-4 mt-6">
           <div className="relative flex items-center">
             <div className="flex-grow border-t border-red-200"></div>
@@ -170,13 +175,33 @@ export default function LoginPage() {
           </div>
 
           <div className="flex gap-4 justify-center">
-            <button className="flex-1 py-2.5 px-4 border border-red-200 rounded-xl bg-white/70 hover:bg-white transition-all" disabled={isLoading}>
-              <i className="fa-brands fa-google text-xl text-red-600"></i>
-            </button>
-            <button className="flex-1 py-2.5 px-4 border border-red-200 rounded-xl bg-white/70 hover:bg-white transition-all" disabled={isLoading}>
+            {/* Google Sign-In Button */}
+            <GoogleSignInButton
+              onSuccess={(user) => {
+                console.log("Google login successful:", user);
+              }}
+              onError={(errorMessage) => {
+                setError(errorMessage);
+              }}
+              disabled={isLoading}
+              className="flex-1"
+            />
+
+            {/* Apple login (disabled for now) */}
+            <button
+              className="flex-1 py-2.5 px-4 border border-red-200 rounded-xl bg-white/70 hover:bg-white transition-all opacity-50 cursor-not-allowed"
+              disabled={true}
+              title="Apple login coming soon"
+            >
               <i className="fa-brands fa-apple text-xl text-red-800"></i>
             </button>
-            <button className="flex-1 py-2.5 px-4 border border-red-200 rounded-xl bg-white/70 hover:bg-white transition-all" disabled={isLoading}>
+
+            {/* Facebook login (disabled for now) */}
+            <button
+              className="flex-1 py-2.5 px-4 border border-red-200 rounded-xl bg-white/70 hover:bg-white transition-all opacity-50 cursor-not-allowed"
+              disabled={true}
+              title="Facebook login coming soon"
+            >
               <i className="fa-brands fa-facebook text-xl text-blue-600"></i>
             </button>
           </div>

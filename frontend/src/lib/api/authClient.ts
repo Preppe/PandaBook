@@ -12,6 +12,10 @@ export interface LoginDto {
     // Add other fields like provider if supporting social login
 }
 
+export interface GoogleLoginDto {
+    idToken: string;
+}
+
 interface LoginResponse {
   token: string;
   refreshToken: string;
@@ -38,6 +42,28 @@ export function useLoginUser(options?: UseMutationOptions<User, Error, LoginDto>
         body: JSON.stringify(credentials),
       });
       // Save tokens
+      tokenManager.setTokens({
+        accessToken: response.token,
+        refreshToken: response.refreshToken,
+      });
+      return response.user;
+    },
+    onSuccess: (...args) => {
+      queryClient.invalidateQueries({ queryKey: ['currentUser'] });
+      options?.onSuccess?.(...args);
+    },
+    ...options,
+  });
+}
+
+export function useGoogleLogin(options?: UseMutationOptions<User, Error, GoogleLoginDto>) {
+  const queryClient = useQueryClient();
+  return useMutation<User, Error, GoogleLoginDto>({
+    mutationFn: async (credentials: GoogleLoginDto) => {
+      const response = await apiClient('/auth/google/login', {
+        method: 'POST',
+        body: JSON.stringify(credentials),
+      });
       tokenManager.setTokens({
         accessToken: response.token,
         refreshToken: response.refreshToken,
@@ -125,5 +151,4 @@ export function useRefreshAccessToken(options?: UseMutationOptions<string | null
   });
 }
 
-// --- Re-export helpers if needed elsewhere ---
 export { tokenManager };
