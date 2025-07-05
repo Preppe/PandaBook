@@ -42,8 +42,8 @@ const nextConfig: NextConfig = {
           },
           {
             key: 'Content-Security-Policy',
-            // Adjust this CSP as needed for your application
-            value: "default-src 'self'; script-src 'self'",
+            // Allow service worker to connect to backend API
+            value: "default-src 'self'; script-src 'self'; connect-src 'self' http://localhost:3000 ws://localhost:3001; worker-src 'self'",
           },
         ],
       },
