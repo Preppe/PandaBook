@@ -3,6 +3,8 @@ import React from "react";
 import useAuthStore from "@/lib/store/authStore";
 import { useLogoutUser } from "@/lib/api/authClient";
 import { AuthGuard } from "@/components/auth/AuthGuard";
+import dayjs from "dayjs";
+import "dayjs/locale/it";
 
 export default function ProfilePage() {
   return (
@@ -39,15 +41,6 @@ function ProfileContent() {
     );
   };
 
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return "Non disponibile";
-    return new Date(dateString).toLocaleDateString("it-IT", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-orange-50 to-orange-100 pb-20">
       {/* Header Profile */}
@@ -71,7 +64,10 @@ function ProfileContent() {
               <p className="text-white/80 text-sm">{user?.email}</p>
               <p className="text-white/70 text-xs mt-1">
                 <i className="fa-solid fa-calendar-days mr-1"></i>
-                Membro dal {formatDate(user?.createdAt)}
+                Membro dal{" "}
+                {user?.createdAt
+                  ? dayjs(user.createdAt).locale("it").format("D MMMM YYYY")
+                  : "Non disponibile"}
               </p>
             </div>
           </div>
