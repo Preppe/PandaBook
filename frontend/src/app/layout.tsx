@@ -18,7 +18,7 @@ export default function RootLayout({
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </head>
-      <body className={cn('min-h-screen bg-gray-50 font-sans antialiased')}>
+      <body suppressHydrationWarning={true}>
         <ClientLayout>
           {children}
           <AudioPlayer />

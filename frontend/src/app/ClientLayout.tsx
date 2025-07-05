@@ -44,12 +44,14 @@ export default function ClientLayout({ children }: ClientLayoutProps) {
 
 
   return (
-    <QueryClientProvider client={queryClientRef.current}>
-      <ClientAuthWrapper>
-        {children}
-        {/* Render MiniPlayer if active */}
-        {isMiniPlayerActive && <MiniPlayer />}
-      </ClientAuthWrapper>
-    </QueryClientProvider>
+    <div className={cn('min-h-screen bg-gray-50 font-sans antialiased')}>
+      <QueryClientProvider client={queryClientRef.current}>
+        <ClientAuthWrapper>
+          {children}
+          {/* Render MiniPlayer if active */}
+          {isMiniPlayerActive && <MiniPlayer />}
+        </ClientAuthWrapper>
+      </QueryClientProvider>
+    </div>
   );
 }
