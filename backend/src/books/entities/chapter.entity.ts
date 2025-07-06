@@ -6,8 +6,8 @@ import { EntityHelper } from 'src/utils/entity-helper';
 
 @Entity()
 export class Chapter extends EntityHelper {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @ApiProperty({ example: 1 })
   @Allow()

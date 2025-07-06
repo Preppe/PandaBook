@@ -1,33 +1,33 @@
 import {
+  BadRequestException,
   Body,
   Controller,
+  Delete,
+  Get,
   HttpCode,
   HttpStatus,
-  Post,
-  SerializeOptions,
-  UseInterceptors,
-  UploadedFiles,
-  Get,
   Param,
-  Res,
-  Headers,
-  Query,
-  Delete,
-  UseGuards,
+  Patch,
+  Post,
   Req,
+  Res,
+  SerializeOptions,
+  UploadedFiles,
+  UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
-import { BooksService } from './books.service';
-import { CreateBookDto } from './dto/create-book.dto';
-import { Book } from './entities/book.entity';
-import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiConsumes, ApiBearerAuth } from '@nestjs/swagger';
-import { FileFieldsInterceptor } from '@nestjs/platform-express';
-import { Response } from 'express';
-import { Audio } from './entities/audio.entity';
-import { JwtPayloadType } from 'src/auth/strategies/types/jwt-payload.type';
-import { BookmarkDto } from './dto/bookmark.dto';
 import { AuthGuard } from '@nestjs/passport';
-import { Request } from 'express';
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
+import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { Request, Response } from 'express';
 import { Paginate, Paginated, PaginateQuery } from 'nestjs-paginate';
+import { JwtPayloadType } from 'src/auth/strategies/types/jwt-payload.type';
+import { BooksService } from './books.service';
+import { BookmarkDto } from './dto/bookmark.dto';
+import { CreateBookDto } from './dto/create-book.dto';
+import { UpdateBookDto } from './dto/update-book.dto';
+import { Audio } from './entities/audio.entity';
+import { Book } from './entities/book.entity';
 
 @ApiTags('Books')
 @Controller({
@@ -36,6 +36,48 @@ import { Paginate, Paginated, PaginateQuery } from 'nestjs-paginate';
 })
 export class BooksController {
   constructor(private readonly booksService: BooksService) {}
+
+  // ===== GET =====
+
+  @Get()
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Get all books', description: 'Retrieves a list of books with pagination and filtering options' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'List of books retrieved successfully.' })
+  @SerializeOptions({ groups: ['user'] })
+  async findAll(@Paginate() query: PaginateQuery): Promise<Paginated<Book>> {
+    return this.booksService.findManyWithPagination(query);
+  }
+
+  @Get('audio/:id')
+  @ApiOperation({ summary: 'Audio metadata', description: 'Retrieves the metadata of the audio file for a book' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Audio metadata retrieved successfully.' })
+  @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Book or audio file not found.' })
+  @SerializeOptions({ groups: ['user'] })
+  async getAudioMetadata(@Param('id') id: string): Promise<Audio> {
+    return this.booksService.getAudioMetadata(id);
+  }
+
+  @Get(':id/stream')
+  @ApiOperation({ summary: 'Stream audio file', description: 'Streams the audio file for a book with support for range requests' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Audio file streamed successfully.' })
+  @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Book or audio file not found.' })
+  @ApiResponse({ status: HttpStatus.PARTIAL_CONTENT, description: 'Partial content (for range requests).' })
+  @SerializeOptions({ groups: ['user'] })
+  async streamAudio(@Param('id') id: string, @Res() res: Response): Promise<void> {
+    return this.booksService.streamAudio(id, res);
+  }
+
+  @Get(':id')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Get a book by ID', description: 'Retrieves a book by its ID' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Book retrieved successfully.' })
+  @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Book not found.' })
+  @SerializeOptions({ groups: ['user'] })
+  async findOne(@Param('id') id: string): Promise<Book> {
+    return this.booksService.findOne(id);
+  }
+
+  // ===== POST =====
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
@@ -57,44 +99,6 @@ export class BooksController {
     return this.booksService.create({ ...createBookDto, audio: audioFile, cover: coverFile });
   }
 
-  @Get()
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Get all books', description: 'Retrieves a list of books with pagination and filtering options' })
-  @ApiResponse({ status: HttpStatus.OK, description: 'List of books retrieved successfully.' })
-  @SerializeOptions({ groups: ['user'] })
-  async findAll(@Paginate() query: PaginateQuery): Promise<Paginated<Book>> {
-    return this.booksService.findManyWithPagination(query);
-  }
-
-  @Get(':id')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Get a book by ID', description: 'Retrieves a book by its ID' })
-  @ApiResponse({ status: HttpStatus.OK, description: 'Book retrieved successfully.' })
-  @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Book not found.' })
-  @SerializeOptions({ groups: ['user'] })
-  async findOne(@Param('id') id: string): Promise<Book> {
-    return this.booksService.findOne(id);
-  }
-
-  @Get(':id/stream')
-  @ApiOperation({ summary: 'Stream audio file', description: 'Streams the audio file for a book with support for range requests' })
-  @ApiResponse({ status: HttpStatus.OK, description: 'Audio file streamed successfully.' })
-  @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Book or audio file not found.' })
-  @ApiResponse({ status: HttpStatus.PARTIAL_CONTENT, description: 'Partial content (for range requests).' })
-  @SerializeOptions({ groups: ['user'] })
-  async streamAudio(@Param('id') id: string, @Res() res: Response): Promise<void> {
-    return this.booksService.streamAudio(id, res);
-  }
-
-  @Get('audio/:id')
-  @ApiOperation({ summary: 'Audio metadata', description: 'Retrieves the metadata of the audio file for a book' })
-  @ApiResponse({ status: HttpStatus.OK, description: 'Audio metadata retrieved successfully.' })
-  @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Book or audio file not found.' })
-  @SerializeOptions({ groups: ['user'] })
-  async getAudioMetadata(@Param('id') id: string): Promise<Audio> {
-    return this.booksService.getAudioMetadata(id);
-  }
-
   // Bookmark endpoints
   @Post('bookmarks')
   @UseGuards(AuthGuard('jwt'))
@@ -110,6 +114,82 @@ export class BooksController {
     await this.booksService.addBookmark(user.id, bookmarkDto.bookId);
   }
 
+  // Chunked upload endpoints
+  @Post('chunk')
+  @HttpCode(HttpStatus.OK)
+  @UseInterceptors(
+    FileFieldsInterceptor([
+      { name: 'chunk', maxCount: 1 },
+      { name: 'cover', maxCount: 1 },
+    ]),
+  )
+  @ApiConsumes('multipart/form-data')
+  @ApiOperation({ summary: 'Upload file chunk', description: 'Uploads a single chunk of a large file' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Chunk uploaded successfully.' })
+  @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Invalid chunk data.' })
+  @SerializeOptions({ groups: ['admin'] })
+  async uploadChunk(
+    @Body() body: {
+      uploadId: string;
+      chunkIndex: number;
+      totalChunks: number;
+      chunk: { buffer: Buffer };
+      metadata?: CreateBookDto;
+    },
+    @UploadedFiles() files: { chunk?: Express.Multer.File[]; cover?: Express.Multer.File[] },
+  ): Promise<{ success: boolean; message: string }> {
+    const { uploadId, chunkIndex, totalChunks, metadata } = body;
+
+    if (!files?.chunk?.[0]) {
+      throw new BadRequestException('Chunk file is required');
+    }
+
+    const chunk = files.chunk[0];
+    // Solo il primo chunk deve portare i metadati e la cover
+    const enrichedMetadata =
+      chunkIndex === 0 && metadata
+        ? {
+            ...metadata,
+            cover: files?.cover?.[0],
+          }
+        : undefined;
+
+    return this.booksService.uploadChunk(uploadId, chunkIndex, totalChunks, chunk.buffer, enrichedMetadata);
+  }
+
+  @Post('finalize')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Finalize chunked upload', description: 'Finalizes a chunked upload and creates the book' })
+  @ApiResponse({ status: HttpStatus.CREATED, description: 'Book created successfully from chunks.' })
+  @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Upload session not found or incomplete.' })
+  @SerializeOptions({ groups: ['admin'] })
+  async finalizeUpload(@Body() body: { uploadId: string }): Promise<Book> {
+    return this.booksService.finalizeUpload(body.uploadId);
+  }
+
+  // ===== PATCH =====
+
+  @Patch(':id')
+  @HttpCode(HttpStatus.OK)
+  @UseInterceptors(
+    FileFieldsInterceptor([
+      { name: 'audio', maxCount: 1 },
+      { name: 'cover', maxCount: 1 },
+    ]),
+  )
+  @ApiConsumes('multipart/form-data')
+  @ApiOperation({ summary: 'Update a book and its chapters', description: 'Updates a book and its chapters' })
+  @ApiBody({ type: UpdateBookDto })
+  @ApiResponse({ status: HttpStatus.OK, description: 'The book has been successfully updated.', type: Book })
+  @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Invalid input data.' })
+  @SerializeOptions({ groups: ['admin'] })
+  async update(@Param('id') id: string, @Body() updateBookDto: UpdateBookDto, @UploadedFiles() files: { cover?: Express.Multer.File[] }): Promise<Book> {
+    const coverFile = files?.cover?.[0];
+    return this.booksService.update(id, { ...updateBookDto, cover: coverFile });
+  }
+
+  // ===== DELETE =====
+
   @Delete('bookmarks/:id')
   @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.NO_CONTENT)
@@ -122,5 +202,22 @@ export class BooksController {
   async removeBookmark(@Param('id') bookId: string, @Req() req: Request): Promise<void> {
     const user = req.user as JwtPayloadType;
     await this.booksService.removeBookmark(user.id, bookId);
+  }
+
+  @Delete('cleanup')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Cleanup failed upload', description: 'Cleans up a failed or cancelled upload session' })
+  @ApiResponse({ status: HttpStatus.NO_CONTENT, description: 'Upload session cleaned up successfully.' })
+  async cleanupUpload(@Body() body: { uploadId: string }): Promise<void> {
+    await this.booksService.cleanupUpload(body.uploadId);
+  }
+
+  @Delete(':id')
+  @ApiOperation({ summary: 'Delete a book', description: 'Deletes a book by its ID along with associated files and data' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Book deleted successfully.', type: Book })
+  @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Book not found.' })
+  @SerializeOptions({ groups: ['admin'] })
+  async remove(@Param('id') id: string): Promise<Book> {
+    return this.booksService.remove(id);
   }
 }

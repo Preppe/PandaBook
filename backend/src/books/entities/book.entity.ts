@@ -29,7 +29,7 @@ export class Book extends EntityHelper {
   @Column({ nullable: true })
   cover: string;
 
-  @OneToOne(() => Audio, (audio) => audio.id, { cascade: true })
+  @OneToOne(() => Audio, (audio) => audio.id, { cascade: true, onDelete: 'SET NULL' })
   @JoinColumn()
   audio?: Audio | null;
 

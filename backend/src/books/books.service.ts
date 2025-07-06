@@ -1,21 +1,20 @@
-import { InjectQueue } from '@nestjs/bull'; // Import InjectQueue
-import { BadRequestException, ForbiddenException, Injectable, Logger, NotFoundException } from '@nestjs/common'; // Import Logger
-import { ConfigService } from '@nestjs/config';
+import { InjectQueue } from '@nestjs/bull';
+import { BadRequestException, ForbiddenException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Queue } from 'bull'; // Import Queue
+import { Queue } from 'bull';
 import { Response } from 'express';
 import { parseBuffer } from 'music-metadata';
 import { paginate, Paginated, PaginateQuery } from 'nestjs-paginate';
-import { JwtPayloadType } from 'src/auth/strategies/types/jwt-payload.type';
-import { AllConfigType } from 'src/config/config.type';
 import { S3Service } from 'src/s3/s3.service';
 import { paginateConfigBook } from 'src/utils/pagination-config';
 import { Readable } from 'stream';
-import { In, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { CreateBookDto } from './dto/create-book.dto';
+import { UpdateBookDto } from './dto/update-book.dto';
 import { Audio } from './entities/audio.entity';
 import { Book } from './entities/book.entity';
 import { Bookmark } from './entities/bookmark.entity';
+import { Chapter } from './entities/chapter.entity';
 
 @Injectable()
 export class BooksService {
@@ -31,8 +30,68 @@ export class BooksService {
     @InjectQueue('audio-processing') private audioQueue: Queue, // Inject the queue
 
     private readonly s3Service: S3Service,
-    private readonly configService: ConfigService<AllConfigType>,
   ) {}
+
+  async update(id: string, updateBookDto: UpdateBookDto): Promise<Book> {
+    const { cover, chapters, ...bookData } = updateBookDto;
+
+    return await this.bookRepository.manager.transaction(async (manager) => {
+      // Recupera il libro con i capitoli
+      const book = await manager.findOne(Book, {
+        where: { id },
+        relations: {chapters: true, audio: true},
+      });
+      if (!book) throw new NotFoundException('Book not found');
+
+      // Aggiorna i dati base
+      Object.assign(book, bookData);
+
+      // Gestione cover
+      if (cover) {
+        const coverS3Key = `${Date.now()}-${cover.originalname}`;
+        await this.s3Service.uploadFile({ ...cover, originalname: coverS3Key }, 'covers', 'public-read');
+        book.cover = coverS3Key;
+      }
+
+      // Gestione capitoli
+      if (Array.isArray(chapters)) {
+        // Capitoli esistenti
+        const existingChapters = book.chapters || [];
+        const chaptersToKeep: Chapter[] = [];
+        for (const chapterDto of chapters) {
+          if (chapterDto.id) {
+            // Update capitolo esistente
+            const chapterId = chapterDto.id;
+            const chapter = existingChapters.find((c) => c.id === chapterId);
+            if (chapter) {
+              Object.assign(chapter, { ...chapterDto, id: chapterId });
+              await manager.save(Chapter, chapter);
+              chaptersToKeep.push(chapter);
+            }
+          } else {
+            // Nuovo capitolo
+            const { id, ...chapterData } = chapterDto;
+            const newChapter = manager.create(Chapter, {
+              ...chapterData,
+              book,
+            });
+            await manager.save(Chapter, newChapter);
+            chaptersToKeep.push(newChapter);
+          }
+        }
+        // Elimina capitoli rimossi
+        for (const chapter of existingChapters) {
+          if (!chapters.find((c) => c.id === chapter.id)) {
+            await manager.delete(Chapter, chapter.id);
+          }
+        }
+        book.chapters = chaptersToKeep;
+      }
+
+      await manager.save(book);
+      return book;
+    });
+  }
 
   async create(createBookDto: CreateBookDto): Promise<Book> {
     const { cover, audio, ...bookData } = createBookDto;
@@ -100,9 +159,8 @@ export class BooksService {
         bookId: savedBook.id,
       });
     } else if (savedBook) {
-        this.logger.log(`Book ID ${savedBook.id} created without audio, skipping chapter generation job.`);
+      this.logger.log(`Book ID ${savedBook.id} created without audio, skipping chapter generation job.`);
     }
-
 
     return savedBook;
   }
@@ -138,7 +196,7 @@ export class BooksService {
       const headers = {
         'Content-Type': contentType,
         'Content-Length': fileSize.toString(),
-        'ETag': etag,
+        ETag: etag,
         'Accept-Ranges': 'bytes',
         'Cache-Control': 'public, max-age=604800', // 1 week cache
         'Content-Disposition': `inline; filename="${book.title}.${audio.format}"`,
@@ -152,12 +210,15 @@ export class BooksService {
         const parts = range.replace(/bytes=/, '').split('-');
         const start = parseInt(parts[0], 10);
         const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
-        const chunkSize = (end - start) + 1;
+        const chunkSize = end - start + 1;
 
         if (start >= fileSize || end >= fileSize) {
-          res.status(416).set({
-            'Content-Range': `bytes */${fileSize}`
-          }).end();
+          res
+            .status(416)
+            .set({
+              'Content-Range': `bytes */${fileSize}`,
+            })
+            .end();
           return;
         }
 
@@ -290,5 +351,173 @@ export class BooksService {
     }
 
     await this.bookmarkRepository.remove(bookmark);
+  }
+
+  // Chunked upload methods
+  private uploadSessions = new Map<
+    string,
+    {
+      chunks: Map<number, Buffer>;
+      metadata: any;
+      totalChunks: number;
+      uploadedChunks: number;
+      createdAt: Date;
+    }
+  >();
+
+  async uploadChunk(
+    uploadId: string,
+    chunkIndex: number,
+    totalChunks: number,
+    chunk: Buffer,
+    metadata?: CreateBookDto,
+  ): Promise<{ success: boolean; message: string }> {
+    // Initialize session if it doesn't exist
+    if (!this.uploadSessions.has(uploadId)) {
+      this.uploadSessions.set(uploadId, {
+        chunks: new Map(),
+        metadata: metadata || {},
+        totalChunks,
+        uploadedChunks: 0,
+        createdAt: new Date(),
+      });
+    }
+
+    const session = this.uploadSessions.get(uploadId)!;
+
+    // Store chunk
+    session.chunks.set(chunkIndex, chunk);
+    session.uploadedChunks++;
+
+    this.logger.log(`Uploaded chunk ${chunkIndex + 1}/${totalChunks} for session ${uploadId}`);
+
+    return {
+      success: true,
+      message: `Chunk ${chunkIndex + 1}/${totalChunks} uploaded successfully`,
+    };
+  }
+
+  async finalizeUpload(uploadId: string): Promise<Book> {
+    const session = this.uploadSessions.get(uploadId);
+
+    if (!session) {
+      throw new BadRequestException('Upload session not found');
+    }
+
+    if (session.uploadedChunks !== session.totalChunks) {
+      throw new BadRequestException(`Incomplete upload: ${session.uploadedChunks}/${session.totalChunks} chunks received`);
+    }
+
+    try {
+      // Reconstruct file from chunks
+      const sortedChunks = Array.from(session.chunks.entries())
+        .sort(([a], [b]) => a - b)
+        .map(([, chunk]) => chunk);
+
+      const completeFile = Buffer.concat(sortedChunks);
+
+      // Create a mock file object similar to multer's file
+      const audioFile = {
+        buffer: completeFile,
+        originalname: session.metadata.originalFilename || 'audio.mp3',
+        mimetype: this.getMimeTypeFromExtension(session.metadata.originalFilename || 'audio.mp3'),
+        size: completeFile.length,
+      };
+
+      // Create book using existing create method
+      const createBookDto = {
+        ...session.metadata,
+        audio: audioFile,
+        cover: session.metadata.cover, // This might be undefined, which is fine
+      };
+
+      const book = await this.create(createBookDto);
+
+      // Cleanup session
+      this.uploadSessions.delete(uploadId);
+
+      this.logger.log(`Successfully finalized upload for session ${uploadId}, created book ${book.id}`);
+
+      return book;
+    } catch (error) {
+      this.logger.error(`Failed to finalize upload for session ${uploadId}:`, error);
+      throw new BadRequestException('Failed to finalize upload');
+    }
+  }
+
+  async cleanupUpload(uploadId: string): Promise<void> {
+    if (this.uploadSessions.has(uploadId)) {
+      this.uploadSessions.delete(uploadId);
+      this.logger.log(`Cleaned up upload session ${uploadId}`);
+    }
+  }
+
+  private getMimeTypeFromExtension(filename: string): string {
+    const extension = filename.split('.').pop()?.toLowerCase();
+    const mimeTypes: Record<string, string> = {
+      mp3: 'audio/mpeg',
+      mp4: 'audio/mp4',
+      m4a: 'audio/mp4',
+      ogg: 'audio/ogg',
+      wav: 'audio/wav',
+      flac: 'audio/flac',
+      aac: 'audio/aac',
+    };
+    return mimeTypes[extension || ''] || 'audio/mpeg';
+  }
+
+  async remove(id: string): Promise<Book> {
+    // Find the book with all related entities
+    const book = await this.bookRepository.findOne({
+      where: { id },
+      relations: ['audio'],
+    });
+
+    if (!book) {
+      throw new NotFoundException('Book not found');
+    }
+
+    try {
+      // Delete associated S3 files
+      const deletePromises: Promise<any>[] = [];
+
+      // Delete audio file from S3 if exists
+      if (book.audio?.s3Key) {
+        const audioS3Key = book.audio.s3Key;
+        deletePromises.push(
+          this.s3Service.deleteFile(audioS3Key, 'audio').catch((error) => {
+            this.logger.warn(`Failed to delete audio file ${audioS3Key} from S3:`, error);
+          }),
+        );
+      }
+
+      // Delete cover file from S3 if exists
+      if (book.cover) {
+        deletePromises.push(
+          this.s3Service.deleteFile(book.cover, 'covers').catch((error) => {
+            this.logger.warn(`Failed to delete cover file ${book.cover} from S3:`, error);
+          }),
+        );
+      }
+
+      // Wait for S3 deletions to complete (but don't fail if they error)
+      await Promise.allSettled(deletePromises);
+
+      // Delete bookmarks associated with this book
+      await this.bookmarkRepository.delete({ bookId: id });
+
+      // Delete audio entity if exists
+      if (book.audio) {
+        await this.audioRepository.remove(book.audio);
+      }
+
+      // Finally, delete the book itself
+      await this.bookRepository.remove(book);
+
+      return book;
+    } catch (error) {
+      this.logger.error(`Failed to delete book ${id}:`, error);
+      throw new BadRequestException('Failed to delete book');
+    }
   }
 }
