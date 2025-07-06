@@ -129,32 +129,48 @@ export class BooksController {
   @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Invalid chunk data.' })
   @SerializeOptions({ groups: ['admin'] })
   async uploadChunk(
-    @Body() body: {
+    @Body()
+    body: {
       uploadId: string;
-      chunkIndex: number;
-      totalChunks: number;
+      chunkIndex: string;
+      totalChunks: string;
       chunk: { buffer: Buffer };
-      metadata?: CreateBookDto;
+      title?: string;
+      author?: string;
+      description?: string;
+      originalFilename?: string;
     },
     @UploadedFiles() files: { chunk?: Express.Multer.File[]; cover?: Express.Multer.File[] },
   ): Promise<{ success: boolean; message: string }> {
-    const { uploadId, chunkIndex, totalChunks, metadata } = body;
+    const { uploadId, chunkIndex: chunkIndexStr, totalChunks: totalChunksStr, title, author, description, originalFilename } = body;
+
+    // Convert string values to numbers
+    const chunkIndex = parseInt(chunkIndexStr as string, 10);
+    const totalChunks = parseInt(totalChunksStr as string, 10);
 
     if (!files?.chunk?.[0]) {
       throw new BadRequestException('Chunk file is required');
     }
 
     const chunk = files.chunk[0];
-    // Solo il primo chunk deve portare i metadati e la cover
+
+    // Validate that first chunk has required metadata
+    if (chunkIndex === 0 && (!title || !author)) {
+      throw new BadRequestException('Title and author are required for the first chunk');
+    }
+
+    // Construct metadata from individual fields for first chunk
     const enrichedMetadata =
-      chunkIndex === 0 && metadata
+      chunkIndex === 0
         ? {
-            ...metadata,
+            title: title || '',
+            author: author || '',
+            description,
             cover: files?.cover?.[0],
           }
         : undefined;
 
-    return this.booksService.uploadChunk(uploadId, chunkIndex, totalChunks, chunk.buffer, enrichedMetadata);
+    return this.booksService.uploadChunk(uploadId, chunkIndex, totalChunks, chunk.buffer, enrichedMetadata, originalFilename);
   }
 
   @Post('finalize')

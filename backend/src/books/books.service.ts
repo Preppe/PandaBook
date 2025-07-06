@@ -15,6 +15,14 @@ import { Audio } from './entities/audio.entity';
 import { Book } from './entities/book.entity';
 import { Bookmark } from './entities/bookmark.entity';
 import { Chapter } from './entities/chapter.entity';
+import { UploadSessionService } from './upload-session.service';
+
+/**
+ * Tipo per serializzazione sessione (cover.buffer: string | Buffer)
+ */
+type CreateBookDtoForSession = Omit<CreateBookDto, 'cover'> & {
+  cover?: Omit<NonNullable<CreateBookDto['cover']>, 'buffer'> & { buffer: string | Buffer };
+};
 
 @Injectable()
 export class BooksService {
@@ -30,6 +38,7 @@ export class BooksService {
     @InjectQueue('audio-processing') private audioQueue: Queue, // Inject the queue
 
     private readonly s3Service: S3Service,
+    private readonly uploadSessionService: UploadSessionService,
   ) {}
 
   async update(id: string, updateBookDto: UpdateBookDto): Promise<Book> {
@@ -39,7 +48,7 @@ export class BooksService {
       // Recupera il libro con i capitoli
       const book = await manager.findOne(Book, {
         where: { id },
-        relations: {chapters: true, audio: true},
+        relations: { chapters: true, audio: true },
       });
       if (!book) throw new NotFoundException('Book not found');
 
@@ -154,12 +163,9 @@ export class BooksService {
 
     // If book saved successfully and has audio, dispatch job
     if (savedBook && savedBook.audio) {
-      this.logger.log(`Dispatching generate-chapters job for book ID: ${savedBook.id}`);
       await this.audioQueue.add('generate-chapters', {
         bookId: savedBook.id,
       });
-    } else if (savedBook) {
-      this.logger.log(`Book ID ${savedBook.id} created without audio, skipping chapter generation job.`);
     }
 
     return savedBook;
@@ -354,102 +360,92 @@ export class BooksService {
   }
 
   // Chunked upload methods
-  private uploadSessions = new Map<
-    string,
-    {
-      chunks: Map<number, Buffer>;
-      metadata: any;
-      totalChunks: number;
-      uploadedChunks: number;
-      createdAt: Date;
-    }
-  >();
-
   async uploadChunk(
     uploadId: string,
     chunkIndex: number,
     totalChunks: number,
     chunk: Buffer,
     metadata?: CreateBookDto,
+    originalFilename?: string,
   ): Promise<{ success: boolean; message: string }> {
-    // Initialize session if it doesn't exist
-    if (!this.uploadSessions.has(uploadId)) {
-      this.uploadSessions.set(uploadId, {
-        chunks: new Map(),
-        metadata: metadata || {},
-        totalChunks,
-        uploadedChunks: 0,
-        createdAt: new Date(),
-      });
-    }
-
-    const session = this.uploadSessions.get(uploadId)!;
-
-    // Store chunk
-    session.chunks.set(chunkIndex, chunk);
-    session.uploadedChunks++;
-
-    this.logger.log(`Uploaded chunk ${chunkIndex + 1}/${totalChunks} for session ${uploadId}`);
-
-    return {
-      success: true,
-      message: `Chunk ${chunkIndex + 1}/${totalChunks} uploaded successfully`,
-    };
+    return this.uploadSessionService.handleChunkUpload(uploadId, chunkIndex, totalChunks, chunk, metadata, originalFilename);
   }
 
   async finalizeUpload(uploadId: string): Promise<Book> {
-    const session = this.uploadSessions.get(uploadId);
+    const session = await this.uploadSessionService.getSession(uploadId);
 
     if (!session) {
       throw new BadRequestException('Upload session not found');
     }
 
-    if (session.uploadedChunks !== session.totalChunks) {
+    // Check if upload is complete
+    const isComplete = await this.uploadSessionService.isUploadComplete(uploadId);
+    if (!isComplete) {
       throw new BadRequestException(`Incomplete upload: ${session.uploadedChunks}/${session.totalChunks} chunks received`);
     }
 
     try {
-      // Reconstruct file from chunks
-      const sortedChunks = Array.from(session.chunks.entries())
-        .sort(([a], [b]) => a - b)
-        .map(([, chunk]) => chunk);
-
-      const completeFile = Buffer.concat(sortedChunks);
+      // Get all chunks in the correct order
+      const chunks = await this.uploadSessionService.getAllChunks(uploadId);
+      const completeFile = Buffer.concat(chunks);
 
       // Create a mock file object similar to multer's file
-      const audioFile = {
+      const filename = session.originalFilename || 'audio.mp3';
+
+      const audioFile: Express.Multer.File = {
         buffer: completeFile,
-        originalname: session.metadata.originalFilename || 'audio.mp3',
-        mimetype: this.getMimeTypeFromExtension(session.metadata.originalFilename || 'audio.mp3'),
+        originalname: filename,
+        mimetype: this.getMimeTypeFromExtension(filename),
         size: completeFile.length,
+        fieldname: 'audio',
+        encoding: '7bit',
+        filename: filename,
+        stream: null as any, // S3Service uses only buffer, stream not needed
+        destination: '',
+        path: '',
       };
+
+      // Ricostruisci la cover se presente e serializzata in base64
+      let coverFile: Express.Multer.File | undefined = undefined;
+      if (session.metadata.cover && session.metadata.cover.buffer) {
+        let coverBuffer = session.metadata.cover.buffer;
+        if (typeof coverBuffer === 'string') {
+          coverBuffer = Buffer.from(coverBuffer, 'base64');
+        }
+        coverFile = {
+          ...session.metadata.cover,
+          buffer: coverBuffer,
+        } as Express.Multer.File;
+      }
 
       // Create book using existing create method
       const createBookDto = {
         ...session.metadata,
         audio: audioFile,
-        cover: session.metadata.cover, // This might be undefined, which is fine
+        ...(coverFile ? { cover: coverFile } : {}),
       };
 
       const book = await this.create(createBookDto);
 
       // Cleanup session
-      this.uploadSessions.delete(uploadId);
-
-      this.logger.log(`Successfully finalized upload for session ${uploadId}, created book ${book.id}`);
+      await this.uploadSessionService.cleanupSession(uploadId);
 
       return book;
     } catch (error) {
-      this.logger.error(`Failed to finalize upload for session ${uploadId}:`, error);
       throw new BadRequestException('Failed to finalize upload');
     }
   }
 
   async cleanupUpload(uploadId: string): Promise<void> {
-    if (this.uploadSessions.has(uploadId)) {
-      this.uploadSessions.delete(uploadId);
-      this.logger.log(`Cleaned up upload session ${uploadId}`);
-    }
+    await this.uploadSessionService.cleanupSession(uploadId);
+  }
+
+  async getUploadProgress(uploadId: string): Promise<{
+    uploadedChunks: number;
+    totalChunks: number;
+    progress: number;
+  } | null> {
+    return await this.uploadSessionService.getUploadProgress(uploadId);
   }
 
   private getMimeTypeFromExtension(filename: string): string {
@@ -484,20 +480,12 @@ export class BooksService {
       // Delete audio file from S3 if exists
       if (book.audio?.s3Key) {
         const audioS3Key = book.audio.s3Key;
-        deletePromises.push(
-          this.s3Service.deleteFile(audioS3Key, 'audio').catch((error) => {
-            this.logger.warn(`Failed to delete audio file ${audioS3Key} from S3:`, error);
-          }),
-        );
+        deletePromises.push(this.s3Service.deleteFile(audioS3Key, 'audio').catch(() => {}));
       }
 
       // Delete cover file from S3 if exists
       if (book.cover) {
-        deletePromises.push(
-          this.s3Service.deleteFile(book.cover, 'covers').catch((error) => {
-            this.logger.warn(`Failed to delete cover file ${book.cover} from S3:`, error);
-          }),
-        );
+        deletePromises.push(this.s3Service.deleteFile(book.cover, 'covers').catch(() => {}));
       }
 
       // Wait for S3 deletions to complete (but don't fail if they error)
@@ -516,7 +504,6 @@ export class BooksService {
 
       return book;
     } catch (error) {
-      this.logger.error(`Failed to delete book ${id}:`, error);
       throw new BadRequestException('Failed to delete book');
     }
   }

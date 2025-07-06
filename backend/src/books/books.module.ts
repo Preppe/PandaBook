@@ -8,17 +8,20 @@ import { Audio } from './entities/audio.entity';
 import { Bookmark } from './entities/bookmark.entity';
 import { Chapter } from './entities/chapter.entity'; // Adjusted import path
 import { BullModule } from '@nestjs/bull'; // Import BullModule for queue injection in BooksService
+import { RedisModule } from 'src/redis/redis.module';
+import { UploadSessionService } from './upload-session.service';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Book, Audio, Bookmark, Chapter]), // Add Chapter entity
     S3Module,
-    BullModule.registerQueue({ // Register queue here if BooksService needs it directly
+    RedisModule,
+    BullModule.registerQueue({
       name: 'audio-processing',
     }),
   ],
-  providers: [BooksService],
+  providers: [BooksService, UploadSessionService],
   controllers: [BooksController],
-  exports: [BooksService, TypeOrmModule] // Export TypeOrmModule to provide repositories
+  exports: [BooksService, TypeOrmModule], // Export TypeOrmModule to provide repositories
 })
 export class BooksModule {}
