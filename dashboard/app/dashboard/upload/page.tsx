@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Progress } from "@/components/ui/progress"
 import { useToast } from "@/hooks/use-toast"
+import { uploadFileWithProgress } from "@/lib/api"
 
 export default function UploadPage() {
   const { toast } = useToast()
@@ -24,6 +25,9 @@ export default function UploadPage() {
   const [coverPreview, setCoverPreview] = useState<string | null>(null)
   const [uploadProgress, setUploadProgress] = useState(0)
   const [isUploading, setIsUploading] = useState(false)
+  const [uploadSpeed, setUploadSpeed] = useState(0)
+  const [timeRemaining, setTimeRemaining] = useState(0)
+  const [uploadController, setUploadController] = useState<AbortController | null>(null)
   const [errors, setErrors] = useState<{
     title?: string
     author?: string
@@ -106,12 +110,33 @@ export default function UploadPage() {
     return Object.keys(newErrors).length === 0
   }
 
+  const formatBytes = (bytes: number): string => {
+    if (bytes === 0) return '0 Bytes'
+    const k = 1024
+    const sizes = ['Bytes', 'KB', 'MB', 'GB']
+    const i = Math.floor(Math.log(bytes) / Math.log(k))
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+  }
+
+  const formatTime = (seconds: number): string => {
+    if (seconds < 60) return `${Math.round(seconds)}s`
+    if (seconds < 3600) return `${Math.round(seconds / 60)}m ${Math.round(seconds % 60)}s`
+    return `${Math.round(seconds / 3600)}h ${Math.round((seconds % 3600) / 60)}m`
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
     if (!validateForm()) return
 
     setIsUploading(true)
+    setUploadProgress(0)
+    setUploadSpeed(0)
+    setTimeRemaining(0)
+
+    // Create AbortController for cancellation
+    const controller = new AbortController()
+    setUploadController(controller)
 
     try {
       const formData = new FormData()
@@ -121,18 +146,19 @@ export default function UploadPage() {
       if (coverImage) formData.append('cover', coverImage)
       if (audioFile) formData.append('audio', audioFile)
 
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.audiobook.fumarola.dev/api/v1'
-      const response = await fetch(`${apiUrl}/books`, {
-        method: 'POST',
-        body: formData,
-        headers: {
-          'Accept': 'application/json',
+      await uploadFileWithProgress('/books', formData, {
+        onProgress: (progress) => {
+          setUploadProgress(progress)
         },
+        onSpeedUpdate: (speed) => {
+          setUploadSpeed(speed)
+        },
+        onTimeRemaining: (timeRemaining) => {
+          setTimeRemaining(timeRemaining)
+        },
+        chunkSize: 10 * 1024 * 1024, // 10MB chunks for better performance
+        signal: controller.signal,
       })
-
-      if (!response.ok) {
-        throw new Error(response.statusText)
-      }
 
       // Reset form
       setTitle("")
@@ -147,6 +173,10 @@ export default function UploadPage() {
         description: "Your audiobook has been uploaded successfully.",
       })
     } catch (error) {
+      if (controller.signal.aborted) {
+        // Upload was cancelled, don't show error toast
+        return
+      }
       toast({
         title: "Upload failed",
         description: error instanceof Error ? error.message : "Failed to upload audiobook",
@@ -155,6 +185,9 @@ export default function UploadPage() {
     } finally {
       setIsUploading(false)
       setUploadProgress(0)
+      setUploadSpeed(0)
+      setTimeRemaining(0)
+      setUploadController(null)
     }
   }
 
@@ -165,6 +198,22 @@ export default function UploadPage() {
 
   const removeAudioFile = () => {
     setAudioFile(null)
+  }
+
+  const cancelUpload = () => {
+    if (uploadController) {
+      uploadController.abort()
+      setUploadController(null)
+    }
+    setIsUploading(false)
+    setUploadProgress(0)
+    setUploadSpeed(0)
+    setTimeRemaining(0)
+    toast({
+      title: "Upload cancelled",
+      description: "The upload has been cancelled.",
+      variant: "destructive",
+    })
   }
 
   return (
@@ -326,18 +375,36 @@ export default function UploadPage() {
             </div>
 
             {isUploading && (
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span>Uploading...</span>
-                  <span>{uploadProgress}%</span>
+              <div className="space-y-3 p-4 border rounded-lg bg-muted/50">
+                <div className="flex justify-between items-center text-sm">
+                  <span className="font-medium">Uploading your audiobook...</span>
+                  <span className="font-mono">{uploadProgress}%</span>
                 </div>
-                <Progress value={uploadProgress} className="h-2 bg-muted [&>div]:bg-redpanda-fur" />
+                <Progress value={uploadProgress} className="h-3 bg-muted [&>div]:bg-redpanda-fur" />
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>
+                    {uploadSpeed > 0 && `${formatBytes(uploadSpeed)}/s`}
+                  </span>
+                  <span>
+                    {timeRemaining > 0 && `${formatTime(timeRemaining)} remaining`}
+                  </span>
+                </div>
+                {audioFile && audioFile.size > 10 * 1024 * 1024 && (
+                  <div className="text-xs text-muted-foreground">
+                    Large file detected - using optimized chunked upload
+                  </div>
+                )}
               </div>
             )}
           </CardContent>
           <CardFooter className="flex justify-between">
-            <Button type="button" variant="outline" disabled={isUploading}>
-              Cancel
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={isUploading ? cancelUpload : undefined}
+              disabled={!isUploading && (Object.keys(errors).length > 0 || !title || !author || !description || !coverImage || !audioFile)}
+            >
+              {isUploading ? "Cancel Upload" : "Cancel"}
             </Button>
             <Button type="submit" disabled={isUploading}>
               {isUploading ? "Uploading..." : "Upload Audiobook"}
