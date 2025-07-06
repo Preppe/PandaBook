@@ -1,18 +1,20 @@
 import { BullModule } from '@nestjs/bull';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { GeminiService } from './gemini.service';
 import { AudioProcessor } from './gemini.processor';
-// TypeOrmModule forFeature removed, will be imported via BooksModule
-import { BooksModule } from '../books/books.module'; // Import BooksModule
+import { BooksModule } from '../books/books.module';
+import { Chapter } from '../books/entities/chapter.entity';
 
 @Module({
   imports: [
-    ConfigModule, // Import ConfigModule to use ConfigService
-    BullModule.registerQueue({ // Keep queue registration for the processor
+    ConfigModule,
+    TypeOrmModule.forFeature([Chapter]),
+    BullModule.registerQueue({
       name: 'audio-processing',
     }),
-    BooksModule, // Import BooksModule to get access to Book/Chapter repositories
+    BooksModule,
   ],
   providers: [
     GeminiService,

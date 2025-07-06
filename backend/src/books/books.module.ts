@@ -22,6 +22,6 @@ import { UploadSessionService } from './upload-session.service';
   ],
   providers: [BooksService, UploadSessionService],
   controllers: [BooksController],
-  exports: [BooksService, TypeOrmModule], // Export TypeOrmModule to provide repositories
+  exports: [BooksService],
 })
 export class BooksModule {}
