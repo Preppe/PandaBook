@@ -1,11 +1,6 @@
-name: dashboard Docker CI
+name: Dashboard CI
 
 on:
-  push:
-    branches: [ "main" ]
-    paths:
-      - 'dashboard/**'
-      - '.github/workflows/dashboard-docker-ci.yml'
   workflow_dispatch:
 
 jobs:
@@ -31,10 +26,6 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.REGISTRY_TOKEN }}
-
-      - name: Create .env file
-        run: |
-          echo "${{ secrets.ENV_DASHBOARD }}" > ./dashboard/.env
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5

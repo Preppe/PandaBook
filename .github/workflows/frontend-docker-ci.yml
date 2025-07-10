@@ -1,11 +1,6 @@
-name: Frontend Docker CI
+name: Frontend CI
 
 on:
-  push:
-    branches: [ "main" ]
-    paths:
-      - 'frontend/**' # Only run if files in the frontend directory change
-      - '.github/workflows/frontend-docker-ci.yml' # Or if the workflow itself changes
   workflow_dispatch:
 
 jobs:
@@ -31,10 +26,6 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.REGISTRY_TOKEN }}
-
-      - name: Create .env file
-        run: |
-          echo "${{ secrets.ENV_FRONTEND }}" > ./frontend/.env
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
