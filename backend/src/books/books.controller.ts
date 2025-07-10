@@ -17,6 +17,9 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import { Roles } from '../roles/roles.decorator';
+import { RolesGuard } from '../roles/roles.guard';
+import { RoleEnum } from '../roles/roles.enum';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Request, Response } from 'express';
@@ -40,6 +43,7 @@ export class BooksController {
   // ===== GET =====
 
   @Get()
+  @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Get all books', description: 'Retrieves a list of books with pagination and filtering options' })
   @ApiResponse({ status: HttpStatus.OK, description: 'List of books retrieved successfully.' })
@@ -49,6 +53,7 @@ export class BooksController {
   }
 
   @Get('audio/:id')
+  @UseGuards(AuthGuard('jwt'))
   @ApiOperation({ summary: 'Audio metadata', description: 'Retrieves the metadata of the audio file for a book' })
   @ApiResponse({ status: HttpStatus.OK, description: 'Audio metadata retrieved successfully.' })
   @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Book or audio file not found.' })
@@ -58,6 +63,7 @@ export class BooksController {
   }
 
   @Get(':id/stream')
+  @UseGuards(AuthGuard('jwt'))
   @ApiOperation({ summary: 'Stream audio file', description: 'Streams the audio file for a book with support for range requests' })
   @ApiResponse({ status: HttpStatus.OK, description: 'Audio file streamed successfully.' })
   @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Book or audio file not found.' })
@@ -68,6 +74,7 @@ export class BooksController {
   }
 
   @Get(':id')
+  @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Get a book by ID', description: 'Retrieves a book by its ID' })
   @ApiResponse({ status: HttpStatus.OK, description: 'Book retrieved successfully.' })
@@ -80,6 +87,8 @@ export class BooksController {
   // ===== POST =====
 
   @Post()
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(RoleEnum.admin)
   @HttpCode(HttpStatus.CREATED)
   @UseInterceptors(
     FileFieldsInterceptor([
@@ -99,7 +108,6 @@ export class BooksController {
     return this.booksService.create({ ...createBookDto, audio: audioFile, cover: coverFile });
   }
 
-  // Bookmark endpoints
   @Post('bookmarks')
   @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.CREATED)
@@ -114,8 +122,9 @@ export class BooksController {
     await this.booksService.addBookmark(user.id, bookmarkDto.bookId);
   }
 
-  // Chunked upload endpoints
   @Post('chunk')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(RoleEnum.admin)
   @HttpCode(HttpStatus.OK)
   @UseInterceptors(
     FileFieldsInterceptor([
@@ -174,6 +183,8 @@ export class BooksController {
   }
 
   @Post('finalize')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(RoleEnum.admin)
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Finalize chunked upload', description: 'Finalizes a chunked upload and creates the book' })
   @ApiResponse({ status: HttpStatus.CREATED, description: 'Book created successfully from chunks.' })
@@ -186,6 +197,8 @@ export class BooksController {
   // ===== PATCH =====
 
   @Patch(':id')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(RoleEnum.admin)
   @HttpCode(HttpStatus.OK)
   @UseInterceptors(
     FileFieldsInterceptor([
@@ -221,6 +234,8 @@ export class BooksController {
   }
 
   @Delete('cleanup')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(RoleEnum.admin)
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Cleanup failed upload', description: 'Cleans up a failed or cancelled upload session' })
   @ApiResponse({ status: HttpStatus.NO_CONTENT, description: 'Upload session cleaned up successfully.' })
@@ -229,6 +244,8 @@ export class BooksController {
   }
 
   @Delete(':id')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(RoleEnum.admin)
   @ApiOperation({ summary: 'Delete a book', description: 'Deletes a book by its ID along with associated files and data' })
   @ApiResponse({ status: HttpStatus.OK, description: 'Book deleted successfully.', type: Book })
   @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Book not found.' })
