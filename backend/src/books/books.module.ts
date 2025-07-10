@@ -16,9 +16,6 @@ import { UploadSessionService } from './upload-session.service';
     TypeOrmModule.forFeature([Book, Audio, Bookmark, Chapter]), // Add Chapter entity
     S3Module,
     RedisModule,
-    BullModule.registerQueue({
-      name: 'audio-processing',
-    }),
   ],
   providers: [BooksService, UploadSessionService],
   controllers: [BooksController],

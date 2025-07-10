@@ -28,10 +28,7 @@ import { BooksModule } from './books/books.module';
 import { ScheduleModule } from '@nestjs/schedule'; // Import ScheduleModule
 import { S3Module } from './s3/s3.module';
 import { ProgressModule } from './progress/progress.module';
-// RedisModule might not be needed if only used for Bull, but keep it for now if other parts use it.
 import { RedisModule } from './redis/redis.module';
-import { GeminiModule } from './gemini/gemini.module'; // Import GeminiModule
-// ChaptersModule removed as its functionality is merged into BooksModule
 
 @Module({
   imports: [
@@ -91,8 +88,6 @@ import { GeminiModule } from './gemini/gemini.module'; // Import GeminiModule
     S3Module,
     ProgressModule,
     RedisModule, // Keep if needed elsewhere
-    GeminiModule, // Add GeminiModule
-    // ChaptersModule removed
     BullModule.forRootAsync({ // Add Bull configuration
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService<AllConfigType>) => ({

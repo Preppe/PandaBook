@@ -17,13 +17,6 @@ import { Bookmark } from './entities/bookmark.entity';
 import { Chapter } from './entities/chapter.entity';
 import { UploadSessionService } from './upload-session.service';
 
-/**
- * Tipo per serializzazione sessione (cover.buffer: string | Buffer)
- */
-type CreateBookDtoForSession = Omit<CreateBookDto, 'cover'> & {
-  cover?: Omit<NonNullable<CreateBookDto['cover']>, 'buffer'> & { buffer: string | Buffer };
-};
-
 @Injectable()
 export class BooksService {
   private readonly logger = new Logger(BooksService.name); // Add logger
@@ -35,7 +28,6 @@ export class BooksService {
     private readonly audioRepository: Repository<Audio>,
     @InjectRepository(Bookmark)
     private readonly bookmarkRepository: Repository<Bookmark>,
-    @InjectQueue('audio-processing') private audioQueue: Queue, // Inject the queue
 
     private readonly s3Service: S3Service,
     private readonly uploadSessionService: UploadSessionService,
@@ -160,13 +152,6 @@ export class BooksService {
       audio: audioEntity,
       cover: coverKey,
     });
-
-    // If book saved successfully and has audio, dispatch job
-    if (savedBook && savedBook.audio) {
-      await this.audioQueue.add('generate-chapters', {
-        bookId: savedBook.id,
-      });
-    }
 
     return savedBook;
   }
