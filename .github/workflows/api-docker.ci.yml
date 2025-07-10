@@ -1,13 +1,6 @@
 name: NestJS API CI
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'backend/**'
-      - '.github/workflows/api-docker.ci.yml'
-  pull_request:
-    branches: [main]
   workflow_dispatch:
 
 jobs:
@@ -16,15 +9,11 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - name: Check out repository with submodules
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          submodules: recursive
           token: ${{ secrets.REGISTRY_TOKEN }}
           fetch-depth: 0
-          
-      # - name: Run e2e tests
-      #   run: docker compose -f docker-compose.ci.yaml --env-file env-example -p ci up --build --exit-code-from api
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -36,17 +25,13 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.REGISTRY_TOKEN }}
 
-      - name: Create .env file
-        run: |
-          echo "${{ secrets.ENV_BACKEND }}" > ./backend/.env
-
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
           context: backend
           file: backend/Dockerfile
           push: true
-          platforms: linux/amd64,linux/arm64 # Add this line for multi-platform build
-          tags: ghcr.io/preppe/audiobook/api:latest
+          platforms: linux/amd64,linux/arm64
+          tags: ghcr.io/preppe/pandabook/api:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max

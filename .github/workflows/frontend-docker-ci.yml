@@ -19,7 +19,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          submodules: recursive
           token: ${{ secrets.REGISTRY_TOKEN }}
           fetch-depth: 0
 
